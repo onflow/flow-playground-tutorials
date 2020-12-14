@@ -1,6 +1,6 @@
 package tutorials
 
-//go:generate go run github.com/kevinburke/go-bindata/go-bindata -prefix ../../../tutorials/... -o internal/assets/assets.go -pkg assets -nometadata -nomemcopy ../../../tutorials/...
+//go:generate go run github.com/kevinburke/go-bindata/go-bindata -prefix ../../../tutorials -o internal/assets/assets.go -pkg assets -nometadata -nomemcopy ../../../tutorials/...
 
 import (
 	"github.com/onflow/flow-playground-tutorials/lib/go/tutorials/internal/assets"
@@ -8,11 +8,16 @@ import (
 
 
 const (
-	playground_01_HelloWorld = "../../../tutorials/01-hello-world/contracts/HelloWorld.cdc"
+	playground_01_HelloWorld = "01-hello-world/contracts/HelloWorld.cdc"
+	playground_01_HelloWorldResource = "01-hello-world/contracts/HelloWorldResource.cdc"
 )
 
 func HelloWorld() []byte {
 	code := assets.MustAssetString(playground_01_HelloWorld)
+	return []byte(code)
+}
 
+func HelloWorldResource() []byte {
+	code := assets.MustAssetString(playground_01_HelloWorldResource)
 	return []byte(code)
 }

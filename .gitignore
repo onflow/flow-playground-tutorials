@@ -1,0 +1,4 @@
+.github
+.history
+.idea
+lib/go/pkg/**/**

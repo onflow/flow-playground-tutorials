@@ -9,7 +9,6 @@
   "author": "Max Daunarovich",
   "license": "ISC",
   "dependencies": {
-    "flow-js-testing": "^0.1.2",
     "jest": "^26.4.2",
     "prettier": "^2.1.2"
   },

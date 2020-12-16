@@ -1,12 +1,3 @@
-// FungibleToken.cdc
-//
-// The FungibleToken contract is a sample implementation of a fungible token on Flow.
-//
-// Fungible tokens behave like everyday currencies -- they can be minted, transferred or
-// traded for digital goods.
-//
-// Follow the fungible tokens tutorial to learn more: https://docs.onflow.org/docs/fungible-tokens
-
 pub contract FungibleToken {
 
     // Total supply of all tokens in existence.
@@ -53,7 +44,7 @@ pub contract FungibleToken {
     // can do custom things with the tokens, like split them up and
     // send them to different places.
     //
-	pub resource interface Receiver {
+    pub resource interface Receiver {
         // deposit
         //
         // Function that can be called to deposit tokens
@@ -89,7 +80,7 @@ pub contract FungibleToken {
     //
     pub resource Vault: Provider, Receiver, Balance {
 
-		// keeps track of the total balance of the account's tokens
+        // keeps track of the total balance of the account's tokens
         pub var balance: UFix64
 
         // initialize the balance at resource creation time
@@ -134,20 +125,20 @@ pub contract FungibleToken {
     // account to be able to receive deposits of this token type.
     //
     pub fun createEmptyVault(): @Vault {
-        return <-create Vault(balance: 0.0)
+        return <-create Vault(balance: UFix64(0))
     }
 
-	// VaultMinter
+    // VaultMinter
     //
     // Resource object that an admin can control to mint new tokens
     pub resource VaultMinter {
 
-		// Function that mints new tokens and deposits into an account's vault
-		// using their `Receiver` reference.
+        // Function that mints new tokens and deposits into an account's vault
+        // using their `Receiver` reference.
         // We say `&AnyResource{Receiver}` to say that the recipient can be any resource
         // as long as it implements the Receiver interface
         pub fun mintTokens(amount: UFix64, recipient: &AnyResource{Receiver}) {
-			FungibleToken.totalSupply = FungibleToken.totalSupply + amount
+                  FungibleToken.totalSupply = FungibleToken.totalSupply + UFix64(amount)
             recipient.deposit(from: <-create Vault(balance: amount))
         }
     }
@@ -156,27 +147,16 @@ pub contract FungibleToken {
     // be initialized at deployment. This is just an example of what
     // an implementation could do in the init function. The numbers are arbitrary.
     init() {
-        self.totalSupply = 30.0
+        self.totalSupply = UFix64(30)
 
         // create the Vault with the initial balance and put it in storage
         // account.save saves an object to the specified `to` path
         // The path is a literal path that consists of a domain and identifier
         // The domain must be `storage`, `private`, or `public`
         // the identifier can be any name
-        let vault <- create Vault(balance: self.totalSupply)
-        self.account.save(<-vault, to: /storage/MainVault)
+        self.account.save(<-create Vault(balance: UFix64(30)), to: /storage/MainVault)
 
-        // Create a new MintAndBurn resource and store it in account storage
+        // Create a new VaultMinter resource and store it in account storage
         self.account.save(<-create VaultMinter(), to: /storage/MainMinter)
-
-        // Create a private capability link for the Minter
-        // Capabilities can be used to create temporary references to an object
-        // so that callers can use the reference to access fields and functions
-        // of the objet.
-        //
-        // The capability is stored in the /private/ domain, which is only
-        // accesible by the owner of the account
-        self.account.link<&VaultMinter>(/private/Minter, target: /storage/MainMinter)
     }
 }
-

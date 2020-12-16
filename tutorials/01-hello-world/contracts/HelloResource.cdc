@@ -6,14 +6,14 @@
 //
 // Learn more about resources in this tutorial: https://docs.onflow.org/docs/hello-world
 
-pub contract HelloWorld {
+pub contract HelloResource {
 
     // Declare a resource that only includes one function.
 	pub resource HelloAsset {
         // A transaction can call this function to get the "Hello, World!"
         // message from the resource.
 		pub fun hello(): String {
-			return "Hello, World!"
+			return "Hello, Resource!"
 		}
 	}
 

@@ -1,6 +1,6 @@
 // Transaction3.cdc
 
-import HelloWorld from 0x02
+import HelloResource from 0x02
 
 // This transaction creates a new capability
 // for the HelloAsset resource in storage
@@ -19,7 +19,7 @@ transaction {
     // It just creates the capability.
     // The capability is created and stored at /public/Hello, and is
     // also returned from the function.
-    let capability = account.link<&HelloWorld.HelloAsset>(/public/Hello, target: /storage/Hello)
+    let capability = account.link<&HelloResource.HelloAsset>(/public/Hello, target: /storage/Hello)
 
     // Use the capability's borrow method to create a new reference
     // to the object that the capability links to

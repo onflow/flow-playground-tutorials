@@ -1,6 +1,6 @@
 // Transaction2.cdc
 
-import HelloWorld from 0x02
+import HelloResource from 0x02
 
 // This transaction calls the "hello" method on the HelloAsset object
 // that is stored in the account's storage by removing that object
@@ -12,7 +12,7 @@ transaction {
 
         // load the resource from storage, specifying the type to load it as
         // and the path where it is stored
-        let helloResource <- acct.load<@HelloWorld.HelloAsset>(from: /storage/Hello)
+        let helloResource <- acct.load<@HelloResource.HelloAsset>(from: /storage/Hello)
 
         // We use optional chaining (?) because the value in storage
         // may or may not exist, and thus is considered optional.

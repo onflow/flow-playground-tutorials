@@ -20,7 +20,8 @@ pub fun main() {
 
     // Use optional chaining to read and log balance fields
     log("Account 1 Balance")
-	log(acct1ReceiverRef.balance)
+	  log(acct1ReceiverRef.balance)
     log("Account 2 Balance")
     log(acct2ReceiverRef.balance)
+  
 }

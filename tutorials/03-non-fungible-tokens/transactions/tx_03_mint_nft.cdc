@@ -1,6 +1,6 @@
 // Transaction2.cdc
 
-import NonFungibleToken from 0x02
+import NonFungibleToken from 0x01
 
 // This transaction allows the Minter account to mint an NFT
 // and deposit it into its collection.

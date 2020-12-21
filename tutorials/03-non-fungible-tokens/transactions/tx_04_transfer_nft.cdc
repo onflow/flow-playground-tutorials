@@ -23,7 +23,7 @@ transaction {
 
     execute {
         // Get the recipient's public account object
-        let recipient = getAccount(0x01)
+        let recipient =0
 
         // Get the Collection reference for the receiver
         // getting the public capability and borrowing a reference from it

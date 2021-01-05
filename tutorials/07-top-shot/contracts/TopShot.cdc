@@ -2,7 +2,7 @@
     Description: Central Smart Contract for NBA TopShot
 
     authors: Joshua Hannan joshua.hannan@dapperlabs.com
-             Dieter Shirley dete@axiomzen.com
+            Dieter Shirley dete@axiomzen.com
 
     This smart contract contains the core functionality for 
     NBA Top Shot, created by Dapper Labs

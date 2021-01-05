@@ -4,11 +4,12 @@
   "description": "Set of tests to ensure that deploying Playground tutorials are working as intended",
   "main": "index.js",
   "scripts": {
-    "test": "npx jest -i" 
+    "test": "npx jest -i"
   },
   "author": "Max Daunarovich",
   "license": "ISC",
   "dependencies": {
+    "@onflow/sdk": "0.0.44",
     "jest": "^26.4.2",
     "prettier": "^2.1.2"
   },

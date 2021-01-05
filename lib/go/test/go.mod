@@ -9,4 +9,4 @@ require (
 	github.com/stretchr/testify v1.6.1
 )
 
-replace github.com/onflow/flow-core-contracts/lib/go/tutorials => ../tutorials
+replace github.com/onflow/flow-core-contracts/lib/go/tutorials => ../cadence

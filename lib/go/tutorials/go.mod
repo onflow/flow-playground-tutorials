@@ -7,4 +7,4 @@ require (
 	github.com/stretchr/testify v1.6.1
 )
 
-replace github.com/onflow/flow-playground-tutorials => ../tutorials
+replace github.com/onflow/flow-playground-tutorials => ../cadence

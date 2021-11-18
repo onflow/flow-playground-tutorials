@@ -26,11 +26,12 @@ pub contract HelloWorld {
         // the storage of the account that this contract is deployed to.
         //
         // Here we are storing the newly created HelloAsset resource
-        // in the private account storage
+        // in the private account storage 
         // by specifying a custom path to the resource
-		self.account.save(<-newHello, to: /storage/Hello)
+        // make sure the path is specific!
+		self.account.save(<-newHello, to: /storage/HelloAssetTutorial)
 
         log("HelloAsset created and stored")
 	}
 }
-
+ 

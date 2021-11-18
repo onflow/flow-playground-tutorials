@@ -12,7 +12,7 @@ transaction {
 
         // load the resource from storage, specifying the type to load it as
         // and the path where it is stored
-        let helloResource <- acct.load<@HelloWorld.HelloAsset>(from: /storage/Hello)
+        let helloResource <- acct.load<@HelloWorld.HelloAsset>(from: /storage/HelloAssetTutorial)
 
         // We use optional chaining (?) because the value in storage
         // may or may not exist, and thus is considered optional.
@@ -21,6 +21,6 @@ transaction {
         // Put the resource back in storage at the same spot
         // We use the force-unwrap operator `!` to get the value
         // out of the optional. It aborts if the optional is nil
-        acct.save(<-helloResource!, to: /storage/Hello)
+        acct.save(<-helloResource!, to: /storage/HelloAssetTutorial)
     }
 }

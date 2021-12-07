@@ -7,7 +7,7 @@ pub fun main() {
 
     // Get both public account objects
     let account1 = getAccount(0x01)
-	let account2 = getAccount(0x02)
+    let account2 = getAccount(0x02)
 
     // Find the public Receiver capability for their Collections
     let acct1Capability = account1.getCapability(ExampleNFT.CollectionPublicPath)

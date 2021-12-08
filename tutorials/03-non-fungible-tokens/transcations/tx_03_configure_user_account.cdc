@@ -1,6 +1,6 @@
-// Transaction3.cdc
+// Setup Account
 
-import NonFungibleToken from 0x02
+import ExampleNFT from 0x02
 
 // This transaction configures a user's account
 // to use the NFT contract by creating a new empty collection,
@@ -9,16 +9,17 @@ transaction {
     prepare(acct: AuthAccount) {
 
         // Create a new empty collection
-        let collection <- NonFungibleToken.createEmptyCollection()
+        let collection <- ExampleNFT.createEmptyCollection()
 
         // store the empty NFT Collection in account storage
-        acct.save<@NonFungibleToken.Collection>(<-collection, to: /storage/NFTCollection)
+        acct.save<@ExampleNFT.Collection>(<-collection, to: ExampleNFT.CollectionStoragePath)
 
         log("Collection created for account 1")
 
         // create a public capability for the Collection
-        acct.link<&{NonFungibleToken.NFTReceiver}>(/public/NFTReceiver, target: /storage/NFTCollection)
+        acct.link<&{ExampleNFT.NFTReceiver}>(ExampleNFT.CollectionPublicPath, target: ExampleNFT.CollectionStoragePath)
 
         log("Capability created")
     }
 }
+ 

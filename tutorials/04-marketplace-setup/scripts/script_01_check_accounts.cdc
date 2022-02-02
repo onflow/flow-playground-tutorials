@@ -1,7 +1,7 @@
 // CheckSetupScript.cdc
 
-import FungibleToken from 0x01
-import NonFungibleToken from 0x02
+import ExampleToken from 0x01
+import ExampleNFT from 0x02
 
 // This script checks that the accounts are set up correctly for the marketplace tutorial.
 //
@@ -15,12 +15,12 @@ pub fun main() {
     // Get references to the account's receivers
     // by getting their public capability
     // and borrowing a reference from the capability
-    let acct1ReceiverRef = acct1.getCapability(/public/MainReceiver)!
-                          .borrow<&FungibleToken.Vault{FungibleToken.Balance}>()
+    let acct1ReceiverRef = acct1.getCapability(/public/CadenceFungibleTokenTutorialReceiver)!
+                          .borrow<&ExampleToken.Vault{ExampleToken.Balance}>()
                           ?? panic("Could not borrow acct1 vault reference")
 
-    let acct2ReceiverRef = acct2.getCapability(/public/MainReceiver)!
-                          .borrow<&FungibleToken.Vault{FungibleToken.Balance}>()
+    let acct2ReceiverRef = acct2.getCapability(/public/CadenceFungibleTokenTutorialReceiver)!
+                          .borrow<&ExampleToken.Vault{ExampleToken.Balance}>()
                           ?? panic("Could not borrow acct2 vault reference")
 
     // Log the Vault balance of both accounts and ensure they are
@@ -38,14 +38,14 @@ pub fun main() {
     }
 
     // Find the public Receiver capability for their Collections
-    let acct1Capability = acct1.getCapability(/public/NFTReceiver)!
-    let acct2Capability = acct2.getCapability(/public/NFTReceiver)!
+    let acct1Capability = acct1.getCapability(NonFungibleToken.CollectionPublicPath)!
+    let acct2Capability = acct2.getCapability(NonFungibleToken.CollectionPublicPath)!
 
     // borrow references from the capabilities
-    let nft1Ref = acct1Capability.borrow<&{NonFungibleToken.NFTReceiver}>()
+    let nft1Ref = acct1Capability.borrow<&{ExampleNFT.NFTReceiver}>()
         ?? panic("Could not borrow acct1 nft collection reference")
 
-    let nft2Ref = acct2Capability.borrow<&{NonFungibleToken.NFTReceiver}>()
+    let nft2Ref = acct2Capability.borrow<&{ExampleNFT.NFTReceiver}>()
         ?? panic("Could not borrow acct2 nft collection reference")
 
     // Print both collections as arrays of IDs

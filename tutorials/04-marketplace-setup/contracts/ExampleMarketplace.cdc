@@ -1,16 +1,22 @@
-import FungibleToken from 0x01
-import NonFungibleToken from 0x02
+import ExampleToken from 0x01
+import ExampleNFT from 0x02
 
-// Marketplace.cdc
+// ExampleMarketplace.cdc
 //
-// The Marketplace contract is a sample implementation of an NFT Marketplace on Flow.
+// The ExampleMarketplace contract is a very basic sample implementation of an NFT ExampleMarketplace on Flow.
 //
 // This contract allows users to put their NFTs up for sale. Other users
 // can purchase these NFTs with fungible tokens.
 //
 // Learn more about marketplaces in this tutorial: https://docs.onflow.org/docs/composable-smart-contracts-marketplace
+//
+// This contract is a learning tool and is not meant to be used in production.
+// See the NFTStorefront contract for a generic marketplace smart contract that 
+// is used by many different projects on the Flow blockchain:
+//
+// https://github.com/onflow/nft-storefront
 
-pub contract Marketplace {
+pub contract ExampleMarketplace {
 
     // Event that is emitted when a new NFT is put up for sale
     pub event ForSale(id: UInt64, price: UFix64)
@@ -28,7 +34,7 @@ pub contract Marketplace {
     // that only exposes the methods that are supposed to be public
     //
     pub resource interface SalePublic {
-        pub fun purchase(tokenID: UInt64, recipient: &AnyResource{NonFungibleToken.NFTReceiver}, buyTokens: @FungibleToken.Vault)
+        pub fun purchase(tokenID: UInt64, recipient: &AnyResource{ExampleNFT.NFTReceiver}, buyTokens: @ExampleToken.Vault)
         pub fun idPrice(tokenID: UInt64): UFix64?
         pub fun getIDs(): [UInt64]
     }
@@ -40,44 +46,53 @@ pub contract Marketplace {
     //
     pub resource SaleCollection: SalePublic {
 
-        // Dictionary of the NFTs that the user is putting up for sale
-        pub var forSale: @{UInt64: NonFungibleToken.NFT}
+        /// A capability for the owner's collection
+        access(self) var ownerCollection: Capability<&ExampleNFT.Collection>
 
         // Dictionary of the prices for each NFT by ID
-        pub var prices: {UInt64: UFix64}
+        access(self) var prices: {UInt64: UFix64}
 
         // The fungible token vault of the owner of this sale.
         // When someone buys a token, this resource can deposit
         // tokens into their account.
-        access(account) let ownerVault: Capability<&AnyResource{FungibleToken.Receiver}>
+        access(account) let ownerVault: Capability<&AnyResource{ExampleToken.Receiver}>
 
-        init (vault: Capability<&AnyResource{FungibleToken.Receiver}>) {
-            self.forSale <- {}
-            self.ownerVault = vault
+        init (ownerCollection: Capability<&ExampleNFT.Collection>, 
+              ownerVault: Capability<&AnyResource{ExampleToken.Receiver}>) {
+
+            pre {
+                // Check that the owner's collection capability is correct
+                ownerCollection.check(): 
+                    "Owner's Moment Collection Capability is invalid!"
+
+                // Check that the fungible token vault capability is correct
+                ownerCapability.check(): 
+                    "Owner's Receiver Capability is invalid!"
+            }
+            self.ownerCollection = ownerCollection
+            self.ownerVault = ownerVault
             self.prices = {}
         }
 
-        // withdraw gives the owner the opportunity to remove a sale from the collection
-        pub fun withdraw(tokenID: UInt64): @NonFungibleToken.NFT {
+        // cancelSale gives the owner the opportunity to cancel a sale in the collection
+        pub fun cancelSale(tokenID: UInt64) {
             // remove the price
             self.prices.remove(key: tokenID)
-            // remove and return the token
-            let token <- self.forSale.remove(key: tokenID) ?? panic("missing NFT")
-            return <-token
+            self.prices[tokenID] = nil
+
+            // Nothing needs to be done with the actual token because it is already in the owner's collection
         }
 
         // listForSale lists an NFT for sale in this collection
-        pub fun listForSale(token: @NonFungibleToken.NFT, price: UFix64) {
-            let id = token.id
-
+        pub fun listForSale(tokenID: UInt64, price: UFix64) {
+            pre {
+                self.ownerCollection.borrow()!.idExists(id: tokenID):
+                    "NFT to be listed does not exist in the owner's collection"
+            }
             // store the price in the price array
-            self.prices[id] = price
+            self.prices[tokenID] = price
 
-            // put the NFT into the the forSale dictionary
-            let oldToken <- self.forSale[id] <- token
-            destroy oldToken
-
-            emit ForSale(id: id, price: price)
+            emit ForSale(id: tokenID, price: price)
         }
 
         // changePrice changes the price of a token that is currently for sale
@@ -88,7 +103,7 @@ pub contract Marketplace {
         }
 
         // purchase lets a user send tokens to purchase an NFT that is for sale
-        pub fun purchase(tokenID: UInt64, recipient: &AnyResource{NonFungibleToken.NFTReceiver}, buyTokens: @FungibleToken.Vault) {
+        pub fun purchase(tokenID: UInt64, recipient: &AnyResource{ExampleNFT.NFTReceiver}, buyTokens: @ExampleToken.Vault) {
             pre {
                 self.forSale[tokenID] != nil && self.prices[tokenID] != nil:
                     "No token matching this ID for sale!"
@@ -108,7 +123,7 @@ pub contract Marketplace {
             vaultRef.deposit(from: <-buyTokens)
 
             // deposit the NFT into the buyers collection
-            recipient.deposit(token: <-self.withdraw(tokenID: tokenID))
+            recipient.deposit(<-self.ownerCollection.borrow()!.withdraw(withdrawID: tokenID))
 
             emit TokenPurchased(id: tokenID, price: price)
         }
@@ -120,16 +135,13 @@ pub contract Marketplace {
 
         // getIDs returns an array of token IDs that are for sale
         pub fun getIDs(): [UInt64] {
-            return self.forSale.keys
-        }
-
-        destroy() {
-            destroy self.forSale
+            return self.prices.keys
         }
     }
 
     // createCollection returns a new collection resource to the caller
-    pub fun createSaleCollection(ownerVault: Capability<&AnyResource{FungibleToken.Receiver}>): @SaleCollection {
+    pub fun createSaleCollection(ownerCollection: Capability<&ExampleNFT.Collection>, 
+                                 ownerVault: Capability<&AnyResource{ExampleToken.Receiver}>): @SaleCollection {
         return <- create SaleCollection(vault: ownerVault)
     }
 }

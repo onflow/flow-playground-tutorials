@@ -1,6 +1,6 @@
-// NFTv2.cdc
+// ExampleNFT.cdc
 //
-// This is a complete version of the NonFungibleToken contract
+// This is a complete version of the ExampleNFT contract
 // that includes withdraw and deposit functionality, as well as a
 // collection resource that can be used to bundle NFTs together.
 //
@@ -9,7 +9,14 @@
 //
 // Learn more about non-fungible tokens in this tutorial: https://docs.onflow.org/docs/non-fungible-tokens
 
-pub contract NonFungibleToken {
+pub contract ExampleNFT {
+
+    // Declare Path constants so paths do not have to be hardcoded
+    // in transactions and scripts
+
+    pub let CollectionStoragePath: StoragePath
+    pub let CollectionPublicPath: PublicPath
+    pub let MinterStoragePath: StoragePath
 
     // Declare the NFT resource type
     pub resource NFT {
@@ -24,7 +31,7 @@ pub contract NonFungibleToken {
 
     // We define this interface purely as a way to allow users
     // to create public, restricted references to their NFT Collection.
-    // They would use this to only expose the deposit, getIDs,
+    // They would use this to publicly expose only the deposit, getIDs,
     // and idExists fields in their Collection
     pub resource interface NFTReceiver {
 
@@ -47,9 +54,9 @@ pub contract NonFungibleToken {
             self.ownedNFTs <- {}
         }
 
-        // withdraw
+        // withdraw 
         //
-        // Function that removes an NFT from the collection
+        // Function that removes an NFT from the collection 
         // and moves it to the calling context
         pub fun withdraw(withdrawID: UInt64): @NFT {
             // If the NFT isn't found, the transaction panics and reverts
@@ -58,17 +65,17 @@ pub contract NonFungibleToken {
             return <-token
         }
 
-        // deposit
+        // deposit 
         //
-        // Function that takes a NFT as an argument and
+        // Function that takes a NFT as an argument and 
         // adds it to the collections dictionary
         pub fun deposit(token: @NFT) {
-            // add the new token to the dictionary which removes the old one
-            let oldToken <- self.ownedNFTs[token.id] <- token
-            destroy oldToken
+            // add the new token to the dictionary with a force assignment
+            // if there is already a value at that key, it will fail and revert
+            self.ownedNFTs[token.id] <-! token
         }
 
-        // idExists checks to see if a NFT
+        // idExists checks to see if a NFT 
         // with the given ID exists in the collection
         pub fun idExists(id: UInt64): Bool {
             return self.ownedNFTs[id] != nil
@@ -84,19 +91,19 @@ pub contract NonFungibleToken {
         }
     }
 
-    // creates a new empty Collection resource and returns it
+    // creates a new empty Collection resource and returns it 
     pub fun createEmptyCollection(): @Collection {
         return <- create Collection()
     }
 
     // NFTMinter
     //
-    // Resource that would be owned by an admin or by a smart contract
+    // Resource that would be owned by an admin or by a smart contract 
     // that allows them to mint new NFTs when needed
     pub resource NFTMinter {
 
         // the ID that is used to mint NFTs
-        // it is onlt incremented so that NFT ids remain
+        // it is only incremented so that NFT ids remain
         // unique. It also keeps track of the total number of NFTs
         // in existence
         pub var idCount: UInt64
@@ -105,33 +112,35 @@ pub contract NonFungibleToken {
             self.idCount = 1
         }
 
-        // mintNFT
+        // mintNFT 
         //
         // Function that mints a new NFT with a new ID
-        // and deposits it in the recipients collection
-        // using their collection reference
-        pub fun mintNFT(recipient: &AnyResource{NFTReceiver}) {
+        // and returns it to the caller
+        pub fun mintNFT(): @NFT {
 
             // create a new NFT
             var newNFT <- create NFT(initID: self.idCount)
 
-            // deposit it in the recipient's account using their reference
-            recipient.deposit(token: <-newNFT)
-
             // change the id so that each ID is unique
-            self.idCount = self.idCount + UInt64(1)
+            self.idCount = self.idCount + 1 as UInt64
+            
+            return <-newNFT
         }
     }
 
 	init() {
+        self.CollectionStoragePath = /storage/nftTutorialCollection
+        self.CollectionPublicPath = /public/nftTutorialCollection
+        self.MinterStoragePath = /storage/nftTutorialMinter
+
 		// store an empty NFT Collection in account storage
-        self.account.save(<-self.createEmptyCollection(), to: /storage/NFTCollection)
+        self.account.save(<-self.createEmptyCollection(), to: self.CollectionStoragePath)
 
         // publish a reference to the Collection in storage
-        self.account.link<&{NFTReceiver}>(/public/NFTReceiver, target: /storage/NFTCollection)
+        self.account.link<&{NFTReceiver}>(self.CollectionPublicPath, target: self.CollectionStoragePath)
 
         // store a minter resource in account storage
-        self.account.save(<-create NFTMinter(), to: /storage/NFTMinter)
+        self.account.save(<-create NFTMinter(), to: self.MinterStoragePath)
 	}
 }
-
+ 

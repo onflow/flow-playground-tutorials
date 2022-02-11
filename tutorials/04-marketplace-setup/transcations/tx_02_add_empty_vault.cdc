@@ -24,8 +24,8 @@ transaction {
     log("Created a Vault and published a reference")
 
     // Borrow a reference for the NFTMinter in storage
-    self.minterRef = acct.borrow<&ExampleNFT.NFTMinter>(from: /storage/NFTMinter)
-        ?? panic("Could not borrow owner's vault minter reference")
+    self.minterRef = acct.borrow<&ExampleNFT.NFTMinter>(from: ExampleNFT.MinterStoragePath)
+        ?? panic("Could not borrow owner's NFT minter reference")
   }
   execute {
     // Get the recipient's public account object
@@ -33,12 +33,12 @@ transaction {
 
     // Get the Collection reference for the receiver
     // getting the public capability and borrowing a reference from it
-    let receiverRef = recipient.getCapability(NonFungibleToken.CollectionPublicPath)!
+    let receiverRef = recipient.getCapability(ExampleNFT.CollectionPublicPath)
                                .borrow<&{ExampleNFT.NFTReceiver}>()
                                ?? panic("Could not borrow nft receiver reference")
 
     // Mint an NFT and deposit it into account 0x01's collection
-    self.minterRef.mintNFT(recipient: receiverRef)
+    receiverRef.deposit(token: <-self.minterRef.mintNFT())
 
     log("New NFT minted for account 1")
   }

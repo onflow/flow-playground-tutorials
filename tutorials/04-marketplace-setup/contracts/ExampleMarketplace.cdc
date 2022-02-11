@@ -8,7 +8,7 @@ import ExampleNFT from 0x02
 // This contract allows users to put their NFTs up for sale. Other users
 // can purchase these NFTs with fungible tokens.
 //
-// Learn more about marketplaces in this tutorial: https://docs.onflow.org/docs/composable-smart-contracts-marketplace
+// Learn more about marketplaces in this tutorial: https://docs.onflow.org/cadence/tutorial/06-marketplace-compose/
 //
 // This contract is a learning tool and is not meant to be used in production.
 // See the NFTStorefront contract for a generic marketplace smart contract that 
@@ -19,22 +19,22 @@ import ExampleNFT from 0x02
 pub contract ExampleMarketplace {
 
     // Event that is emitted when a new NFT is put up for sale
-    pub event ForSale(id: UInt64, price: UFix64)
+    pub event ForSale(id: UInt64, price: UFix64, owner: Address?)
 
     // Event that is emitted when the price of an NFT changes
-    pub event PriceChanged(id: UInt64, newPrice: UFix64)
+    pub event PriceChanged(id: UInt64, newPrice: UFix64, owner: Address?)
 
     // Event that is emitted when a token is purchased
-    pub event TokenPurchased(id: UInt64, price: UFix64)
+    pub event TokenPurchased(id: UInt64, price: UFix64, seller: Address?, buyer: Address?)
 
     // Event that is emitted when a seller withdraws their NFT from the sale
-    pub event SaleWithdrawn(id: UInt64)
+    pub event SaleCanceled(id: UInt64, seller: Address?)
 
     // Interface that users will publish for their Sale collection
     // that only exposes the methods that are supposed to be public
     //
     pub resource interface SalePublic {
-        pub fun purchase(tokenID: UInt64, recipient: &AnyResource{ExampleNFT.NFTReceiver}, buyTokens: @ExampleToken.Vault)
+        pub fun purchase(tokenID: UInt64, recipient: Capability<&AnyResource{ExampleNFT.NFTReceiver}>, buyTokens: @ExampleToken.Vault)
         pub fun idPrice(tokenID: UInt64): UFix64?
         pub fun getIDs(): [UInt64]
     }
@@ -63,10 +63,10 @@ pub contract ExampleMarketplace {
             pre {
                 // Check that the owner's collection capability is correct
                 ownerCollection.check(): 
-                    "Owner's Moment Collection Capability is invalid!"
+                    "Owner's NFT Collection Capability is invalid!"
 
                 // Check that the fungible token vault capability is correct
-                ownerCapability.check(): 
+                ownerVault.check(): 
                     "Owner's Receiver Capability is invalid!"
             }
             self.ownerCollection = ownerCollection
@@ -92,23 +92,25 @@ pub contract ExampleMarketplace {
             // store the price in the price array
             self.prices[tokenID] = price
 
-            emit ForSale(id: tokenID, price: price)
+            emit ForSale(id: tokenID, price: price, owner: self.owner?.address)
         }
 
         // changePrice changes the price of a token that is currently for sale
         pub fun changePrice(tokenID: UInt64, newPrice: UFix64) {
             self.prices[tokenID] = newPrice
 
-            emit PriceChanged(id: tokenID, newPrice: newPrice)
+            emit PriceChanged(id: tokenID, newPrice: newPrice, owner: self.owner?.address)
         }
 
         // purchase lets a user send tokens to purchase an NFT that is for sale
-        pub fun purchase(tokenID: UInt64, recipient: &AnyResource{ExampleNFT.NFTReceiver}, buyTokens: @ExampleToken.Vault) {
+        pub fun purchase(tokenID: UInt64, recipient: Capability<&AnyResource{ExampleNFT.NFTReceiver}>, buyTokens: @ExampleToken.Vault) {
             pre {
-                self.forSale[tokenID] != nil && self.prices[tokenID] != nil:
+                self.prices[tokenID] != nil:
                     "No token matching this ID for sale!"
-                buyTokens.balance >= (self.prices[tokenID] ?? UFix64(0)):
+                buyTokens.balance >= (self.prices[tokenID] ?? 0.0):
                     "Not enough tokens to by the NFT!"
+                recipient.borrow != nil:
+                    "Invalid NFT receiver capability!"
             }
 
             // get the value out of the optional
@@ -122,10 +124,14 @@ pub contract ExampleMarketplace {
             // deposit the purchasing tokens into the owners vault
             vaultRef.deposit(from: <-buyTokens)
 
-            // deposit the NFT into the buyers collection
-            recipient.deposit(<-self.ownerCollection.borrow()!.withdraw(withdrawID: tokenID))
+            // borrow a reference to the object that the receiver capability links to
+            // We can force-cast the result here because it has already been checked in the pre-conditions
+            let receiverReference = recipient.borrow()!
 
-            emit TokenPurchased(id: tokenID, price: price)
+            // deposit the NFT into the buyers collection
+            receiverReference.deposit(token: <-self.ownerCollection.borrow()!.withdraw(withdrawID: tokenID))
+
+            emit TokenPurchased(id: tokenID, price: price, seller: self.owner?.address, buyer: receiverReference.owner?.address)
         }
 
         // idPrice returns the price of a specific token in the sale
@@ -142,6 +148,6 @@ pub contract ExampleMarketplace {
     // createCollection returns a new collection resource to the caller
     pub fun createSaleCollection(ownerCollection: Capability<&ExampleNFT.Collection>, 
                                  ownerVault: Capability<&AnyResource{ExampleToken.Receiver}>): @SaleCollection {
-        return <- create SaleCollection(vault: ownerVault)
+        return <- create SaleCollection(ownerCollection: ownerCollection, ownerVault: ownerVault)
     }
 }

@@ -1,4 +1,4 @@
-// Script2.cdc
+// GetSaleIDs.cdc
 
 import ExampleToken from 0x01
 import ExampleNFT from 0x02
@@ -10,7 +10,7 @@ pub fun main() {
     let account1 = getAccount(0x01)
 
     // Find the public Sale reference to their Collection
-    let acct1saleRef = account1.getCapability(/public/NFTSale)!
+    let acct1saleRef = account1.getCapability(/public/NFTSale)
                        .borrow<&AnyResource{ExampleMarketplace.SalePublic}>()
                        ?? panic("Could not borrow acct2 nft sale reference")
 

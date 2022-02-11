@@ -8,8 +8,8 @@ import ExampleNFT from 0x02
 transaction {
 
   // Public Vault Receiver References for both accounts
-  let acct1Ref: &AnyResource{ExampleToken.Receiver}
-  let acct2Ref: &AnyResource{ExampleToken.Receiver}
+  let acct1Capability: Capability<&AnyResource{ExampleToken.Receiver}>
+  let acct2Capability: Capability<&AnyResource{ExampleToken.Receiver}>
 
   // Private minter references for this account to mint tokens
   let minterRef: &ExampleToken.VaultMinter
@@ -19,23 +19,19 @@ transaction {
     let account2 = getAccount(0x02)
 
     // Retrieve public Vault Receiver references for both accounts
-    self.acct1Ref = acct.getCapability(/public/CadenceFungibleTokenTutorialReceiver)!
-                    .borrow<&ExampleToken.Vault{ExampleToken.Receiver}>()
-                    ?? panic("Could not borrow owner's vault reference")
+    self.acct1Capability = acct.getCapability<&AnyResource{ExampleToken.Receiver}>(/public/CadenceFungibleTokenTutorialReceiver)
 
-    self.acct2Ref = account2.getCapability(/public/CadenceFungibleTokenTutorialReceiver)!
-                    .borrow<&ExampleToken.Vault{ExampleToken.Receiver}>()
-                    ?? panic("Could not borrow acct2's vault reference")
+    self.acct2Capability = account2.getCapability<&AnyResource{ExampleToken.Receiver}>(/public/CadenceFungibleTokenTutorialReceiver)
 
     // Get the stored Minter reference for account 0x01
-    self.minterRef = acct.borrow<&ExampleToken.VaultMinter>(from: /storage/MainMinter)
+    self.minterRef = acct.borrow<&ExampleToken.VaultMinter>(from: /storage/CadenceFungibleTokenTutorialMinter)
         ?? panic("Could not borrow owner's vault minter reference")
   }
 
   execute {
     // Mint tokens for both accounts
-    self.minterRef.mintTokens(amount: UFix64(20), recipient: self.acct2Ref)
-    self.minterRef.mintTokens(amount: UFix64(10), recipient: self.acct1Ref)
+    self.minterRef.mintTokens(amount: 20.0, recipient: self.acct2Capability)
+    self.minterRef.mintTokens(amount: 10.0, recipient: self.acct1Capability)
 
     log("Minted new fungible tokens for account 1 and 2")
   }

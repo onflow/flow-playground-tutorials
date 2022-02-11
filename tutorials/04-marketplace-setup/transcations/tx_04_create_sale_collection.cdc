@@ -1,4 +1,4 @@
-// Transaction1.cdc
+// CreateSale.cdc
 
 import ExampleToken from 0x01
 import ExampleNFT from 0x02
@@ -13,18 +13,17 @@ transaction {
 
         // Borrow a reference to the stored Vault
         let receiver = acct.getCapability<&{ExampleToken.Receiver}>(/public/CadenceFungibleTokenTutorialReceiver)
-            ?? panic("Could not get a capability to the owner's vault")
+
+        // borrow a reference to the nftTutorialCollection in storage
+        let collectionCapability = acct.link<&ExampleNFT.Collection>(/private/nftTutorialCollection, target: ExampleNFT.CollectionStoragePath)
+          ?? panic("Unable to create private link to NFT Collection")
 
         // Create a new Sale object,
         // initializing it with the reference to the owner's vault
-        let sale <- ExampleMarketplace.createSaleCollection(ownerVault: receiver)
-
-        // borrow a reference to the nftTutorialCollection in storage
-        let collectionRef = acct.borrow<&ExampleNFT.Collection>(from: /storage/nftTutorialCollection)
-            ?? panic("Could not borrow owner's nft collection reference")
+        let sale <- ExampleMarketplace.createSaleCollection(ownerCollection: collectionCapability, ownerVault: receiver)
 
         // List the token for sale by moving it into the sale object
-        sale.listForSale(tokenID: 1, price: UFix64(10))
+        sale.listForSale(tokenID: 1, price: 10.0)
 
         // Store the sale object in the account storage
         acct.save(<-sale, to: /storage/NFTSale)

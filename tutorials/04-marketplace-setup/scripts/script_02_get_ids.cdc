@@ -1,8 +1,8 @@
-// Script2.cdc
+// GetSaleIDs.cdc
 
-import FungibleToken from 0x01
-import NonFungibleToken from 0x02
-import Marketplace from 0x03
+import ExampleToken from 0x01
+import ExampleNFT from 0x02
+import ExampleMarketplace from 0x03
 
 // This script prints the NFTs that account 0x01 has for sale.
 pub fun main() {
@@ -10,8 +10,8 @@ pub fun main() {
     let account1 = getAccount(0x01)
 
     // Find the public Sale reference to their Collection
-    let acct1saleRef = account1.getCapability(/public/NFTSale)!
-                       .borrow<&AnyResource{Marketplace.SalePublic}>()
+    let acct1saleRef = account1.getCapability(/public/NFTSale)
+                       .borrow<&AnyResource{ExampleMarketplace.SalePublic}>()
                        ?? panic("Could not borrow acct2 nft sale reference")
 
     // Los the NFTs that are for sale

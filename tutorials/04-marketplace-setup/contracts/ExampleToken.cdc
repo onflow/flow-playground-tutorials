@@ -1,13 +1,16 @@
-// FungibleToken.cdc
+// ExampleToken.cdc
 //
-// The FungibleToken contract is a sample implementation of a fungible token on Flow.
+// The ExampleToken contract is a sample implementation of a fungible token on Flow.
 //
 // Fungible tokens behave like everyday currencies -- they can be minted, transferred or
 // traded for digital goods.
 //
 // Follow the fungible tokens tutorial to learn more: https://docs.onflow.org/docs/fungible-tokens
+//
+// This is a basic implementation of a Fungible Token and is NOT meant to be used in production
+// See the Flow Fungible Token standard for real examples: https://github.com/onflow/flow-ft
 
-pub contract FungibleToken {
+pub contract ExampleToken {
 
     // Total supply of all tokens in existence.
     pub var totalSupply: UFix64
@@ -61,7 +64,7 @@ pub contract FungibleToken {
         //
         pub fun deposit(from: @Vault) {
             pre {
-                from.balance > UFix64(0):
+                from.balance > 0.0:
                     "Deposit balance must be positive"
             }
         }
@@ -146,9 +149,12 @@ pub contract FungibleToken {
 		// using their `Receiver` reference.
         // We say `&AnyResource{Receiver}` to say that the recipient can be any resource
         // as long as it implements the Receiver interface
-        pub fun mintTokens(amount: UFix64, recipient: &AnyResource{Receiver}) {
-			FungibleToken.totalSupply = FungibleToken.totalSupply + amount
-            recipient.deposit(from: <-create Vault(balance: amount))
+        pub fun mintTokens(amount: UFix64, recipient: Capability<&AnyResource{Receiver}>) {
+            let recipientRef = recipient.borrow()
+                ?? panic("Could not borrow a receiver reference to the vault")
+
+            ExampleToken.totalSupply = ExampleToken.totalSupply + UFix64(amount)
+            recipientRef.deposit(from: <-create Vault(balance: amount))
         }
     }
 
@@ -164,10 +170,10 @@ pub contract FungibleToken {
         // The domain must be `storage`, `private`, or `public`
         // the identifier can be any name
         let vault <- create Vault(balance: self.totalSupply)
-        self.account.save(<-vault, to: /storage/MainVault)
+        self.account.save(<-vault, to: /storage/CadenceFungibleTokenTutorialVault)
 
         // Create a new MintAndBurn resource and store it in account storage
-        self.account.save(<-create VaultMinter(), to: /storage/MainMinter)
+        self.account.save(<-create VaultMinter(), to: /storage/CadenceFungibleTokenTutorialMinter)
 
         // Create a private capability link for the Minter
         // Capabilities can be used to create temporary references to an object
@@ -176,7 +182,7 @@ pub contract FungibleToken {
         //
         // The capability is stored in the /private/ domain, which is only
         // accesible by the owner of the account
-        self.account.link<&VaultMinter>(/private/Minter, target: /storage/MainMinter)
+        self.account.link<&VaultMinter>(/private/Minter, target: /storage/CadenceFungibleTokenTutorialMinter)
     }
 }
 

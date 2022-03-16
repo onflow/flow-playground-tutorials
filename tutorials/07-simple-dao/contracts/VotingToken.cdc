@@ -1,18 +1,26 @@
-/// It is extension of the Fungible token standard
-/// Goal here to showcase the possibilities in cadence language to design
-/// the governance token, It has the minimum functionality of being a governance token
-/// while it can be extended more to support more shposticated edge cases.
-/// Note - It is not a production ready code
-pub contract VotingToken {
+/// VotingToken is an implementation of the Fungible token standard
+/// The goal is to showcase the possibilities Cadence to design
+/// a governance token.
+/// 
+/// It has the minimum functionality of being a governance token
+/// while it can be extended more to support more sophisticated edge cases.
 
-    /// It is a good practice to store the paths in a contract variable instead of
-    /// hanging strings in the contract, It helps avoid the human mistake of re-writing the storage paths
-    /// again and again.
-    ///
-    /// Storage path where vault resource get stored.
+/// Note - This is not production ready code
+/// and is only meant to be used for educational and tutorial purposes
+
+/// This contract keeps track of a checkpoint, which is equivalent to the timestamp
+/// on a real network, but the timestamp cannot be used in the playground.
+
+/// When users vote with the token, the voting weight is taken from a specific checkpoint
+
+import FungibleToken from 0x01
+
+pub contract VotingToken: FungibleToken {
+
+    /// Storage path where vault resources are stored.
     pub let vaultPath: StoragePath
 
-    /// Public path where the vault public capability get stored
+    /// Public path where the vault public capabilities are stored
     pub let vaultPublicPath: PublicPath
 
     /// Storage Path that holds the minter resource
@@ -24,30 +32,35 @@ pub contract VotingToken {
     /// Total supply of the voting token
     pub var totalSupply: UFix64
 
-    /// Checkpoint is the Id at which the snapshot of the balance taken.
-    /// Ex - if Alice balance is 10 before taking the snapshot and just after that new checkpoint get
-    /// created then at new checkpointId alice balance get recorded to be 10. So it always have the balance
-    /// that is recorded last for a given checkpoint.
-    pub var checkpointId: UInt16
+    /// Checkpoint is equivalent to timestamp. It is the Id for the point in time
+    /// at which a snapshot of the user's balance can be taken.
+    pub var checkpointCounter: UInt16
 
-    /// Event emitted when someone (i.e `of`) calls the `delegate` function to make 
-    /// vault owner delegate of the `of`.
-    pub event Delegated(of: Address)
+    /// Event emitted when someone (i.e `to`) calls the `delegate` function to make 
+    /// vault owner delegate to the `to`.
+    pub event Delegated(to: Address, amount: UFix64)
 
     /// Event emitted when new checkpoint get created by the administrator.
     pub event CheckPointCreated(newCheckpointId: UInt16)
-    
-    /// Recevier interface to facilitate the working of the desposit in vault.
+
+    /// TokensWithdrawn
+    ///
+    /// The event that is emitted when tokens are withdrawn from a Vault
+    pub event TokensWithdrawn(amount: UFix64, from: Address?)
+
+    /// TokensDeposited
+    ///
+    /// The event that is emitted when tokens are deposited to a Vault
+    pub event TokensDeposited(amount: UFix64, to: Address?)
+
     pub resource interface Recevier {
         pub fun deposit(vault: @Vault)
     }
 
-    /// Provider interface to facilitate the working of the withdraw of vault.
     pub resource interface Provider {
         pub fun withdraw(amount: UFix64): @Vault
     }
 
-    /// Resource interface for balance
     pub resource interface Balance {
         pub var balance: UFix64
 
@@ -59,36 +72,37 @@ pub contract VotingToken {
         }
     }
 
-    /// Resource to provide the voting power at a given `checkpointId`.
+    /// Interface to query the voting power at a given `checkpointCounter`.
     pub resource interface VotingPower {
         pub fun getVotingPower(at: UInt16): UFix64
         pub fun votingPowerDelegated(): Bool
     }
 
-    /// Resource that allows to delegate the voting power to another token holder.
-    /// Ex - Alice and Bob are the 2 token holder of the `VotingToken` and Alice don't want
-    /// to participate in the governance system then she can delegate her voting power to the Bob
-    /// using the `delegate` function. So Alice calls `delegate()` function of the bob to appoint him
-    /// the delegate of her voting power.
+    /// Interface that allows delegating the voting power to another token holder.
+    /// Ex - Alice and Bob are the 2 token holder of the `VotingToken` and Alice doesn't want
+    /// to participate in the governance system. She can delegate her voting power to Bob
+    /// using the `delegate` function. So Alice calls bob's `delegate()` function to appoint him
+    /// as the delegatee of her voting power.
     pub resource interface Delegation {
         pub fun delegate(cap: Capability<&AnyResource{DelegateVotingPower, VotingPower}>)
     }
 
-    /// Resource that allows to facilitate the switch over the voting power.
-    /// If `true` as status get passed then given account delegating there voting power to
-    /// the given capability and in future can't vote using there voting power until delegation get revoked.
+    /// Interface that facilitates the delegation of voting power.
+    /// If status is `true`, the given account delegating their voting power to
+    /// the given capability and in future can't vote using their voting power
+    /// until the delegation gets revoked.
     pub resource interface DelegateVotingPower {
         pub fun delegateVotingPower(status: Bool, delegateTo: Address)
     }
 
-    /// Introduced the new resource because we don't want to allow someone else to vote
-    /// using someone else voting power without delegation.
+    /// This Vote resource is used because we don't want to allow someone else to vote
+    /// using someone else voting power without being delegated to.
     /// User should create a resource object using `createVoteImpression()` and pass the public
     /// capability to read the voting power.
-    /// It is only a workaround to make it permissioned, It could be improve with the better design.
-    /// Note - This should always be a private resource
+    /// It is only a workaround to make it permissioned, It could be improve with a better design.
+    /// Note - This should always be a private resource stored in /storage/ without a public link
     pub resource Vote {
-        // Hold the capability that will allow to get the voting power of the resource owner.
+        // Capability that allows getting the voting power of the resource owner.
         pub let impression: Capability<&AnyResource{VotingPower}>
 
         init(impression: Capability<&AnyResource{VotingPower}>) {
@@ -98,83 +112,85 @@ pub contract VotingToken {
 
     pub resource Vault: Provider, Recevier, Balance, VotingPower, DelegateVotingPower, Delegation {
         
-        // Amount of tokens hold by the vault
+        // Amount of tokens held by the vault
         pub var balance: UFix64
 
-        // Variable to know whether the user voting power is delegate or it is allowed to vote itself.
+        // Variable to know whether the user voting power is delegated or not
         // Ex - if it is set `true` then voting power is delegated to `delegateTo` address.
         pub var isVotingPowerDelegated: Bool
 
-        // Optional address to hold whom can act as the delegate of the vault owner.
+        // Optional address to hold the delegatee of the vault owner.
         access(self) var delegateTo: Address?
 
-        // It the checkpoint Id at which the last snapshot taken for the given vault.
+        // The checkpoint Id at which the last snapshot was taken for the given vault.
         pub var lastCheckpointId: UInt16
 
-        // No. of maximum delegate that the vault owner can be to other token holders.
+        // Maximum number of vaults that can delegate to this vault.
         // In the current implementation it is set to 10
-        pub let maximumDelegate: UInt16
+        pub let maximumDelegators: UInt16
 
         // Dictionary to keep track of the voting power for a given checkpoint.
         access(self) var votingPower: {UInt16: UFix64}
 
-        // Array list to contain the capabilities whom the vault owner is the delegate of.
+        // Array list to contain the capabilities of vaults that have delegated to this vault
         access(self) var delegateeOf: [Capability<&AnyResource{VotingPower}>]
 
         init(balance: UFix64) {
             self.balance = balance
             self.votingPower = {}
             self.isVotingPowerDelegated = false
-            self.lastCheckpointId = VotingToken.checkpointId
+            self.lastCheckpointId = VotingToken.checkpointCounter
             self.delegateeOf = []
-            self.maximumDelegate = 10
+            self.maximumDelegators = 10
             self.delegateTo = nil
         }
 
-        // Function to deposit the vault.
-        // It also going to create the checkpoint/snapshot for a current checkpointId.
+        // Function to deposit a VotingToken vault
+        // It also going to create the checkpoint/snapshot for a current checkpointCounter.
         pub fun deposit(vault: @Vault) {
-            pre {
-                vault.balance > 0.0 : "Balance should be greater than 0"
+            if vault.balance > 0.0 {
+                let vault <- from as! @VotingToken.Vault
+                self.balance = self.balance + vault.balance
+                emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
+                self._updateCheckpointBalances()
+                vault.balance = 0.0
             }
-            self.balance = self.balance + vault.balance
-            self._updateCheckpointBalances()
             destroy vault
         }
 
         // Function to withdraw the vault.
-        // It also going to create the checkpoint/snapshot for a current checkpointId.
+        // It also going to create the checkpoint/snapshot for a current checkpointCounter.
         pub fun withdraw(amount: UFix64): @Vault {
-            pre {
-                amount > 0.0 : "Zero amount is not allowed"
+            if amount > 0.0 {
+                self.balance = self.balance - amount
+                self._updateCheckpointBalances()
+                emit TokensWithdrawn(amount: amount, from: self.owner?.address)
             }
-            self.balance = self.balance - amount
-            self._updateCheckpointBalances()
             let token <- create Vault(balance: amount)
             return <- token
         }
 
         access(self) fun _updateCheckpointBalances() {
-            let currentCheckpointId = VotingToken.checkpointId
+            let currentCheckpointId = VotingToken.checkpointCounter
             self.votingPower[currentCheckpointId] = self.balance
         }
 
-        /// Allow to delegate the voting power of a given capability.
+        /// Delegates the voting power of this vault to a given capability.
         /// Ex - User A wants to delegate the voting power to User B then User A would call
-        /// delegate function of the User B by passing its own capability.
-        /// Note - User B can't be a delegate of anymore than the `maximumDelegate`.
+        /// User B's delegate function and passing its own capability as an argument.
+        /// Note - User B can't be a delegate of anymore than the `maximumDelegators`.
         pub fun delegate(cap: Capability<&AnyResource{DelegateVotingPower, VotingPower}>) {
             pre {
                 cap.check() : "Not a valid capability"
             }
-            let capRef = cap.borrow()?? panic("Unable to borrow the ref")
-            assert(self.delegateeOf.length > Int(self.maximumDelegate), message:"Delegatee limit reached")
+            let capRef = cap.borrow() ?? panic("Unable to borrow a reference to the delegating capability")
+            assert(self.delegateeOf.length < Int(self.maximumDelegators), message: "Delegatee limit reached")
             capRef.delegateVotingPower(status: true, delegateTo: self.owner!.address)
             self.delegateeOf.append(cap)
             emit Delegated(of: cap.address)
         }
 
-        /// Switch to know the owner of the delegate power.
+        /// Switch to set the owner of the delegated power.
         pub fun delegateVotingPower(status: Bool, delegateTo: Address) {
             self.isVotingPowerDelegated = status
             self.delegateTo = delegateTo
@@ -185,16 +201,20 @@ pub contract VotingToken {
             return self.isVotingPowerDelegated
         }
 
-        /// Give the voting power at the given checkpoint Id.
+        /// Get the voting power at the given checkpoint Id.
         pub fun getVotingPower(at: UInt16): UFix64 {
             pre {
-                at <= VotingToken.checkpointId : "Can not query the voting power to a non existent block number"
+                at <= VotingToken.checkpointCounter : "Can not query the voting power to a non existent block number"
             }
+
+            // First, iterate through all the vaults delegating to this vault and add their power
             var tempPower: UFix64 = 0.0;
             for cap in self.delegateeOf {
-                let capRef = cap.borrow()?? panic("Unable to borrow the ref")
+                let capRef = cap.borrow() ?? panic("Unable to borrow a reference to the delegator capability")
                 tempPower = tempPower + capRef.getVotingPower(at: at)
             }
+
+            // Then, get the base voting power of this vault
             var selfVotingPower : UFix64 = 0.0;
             if at >= self.lastCheckpointId {
                 selfVotingPower = self.votingPower[self.lastCheckpointId] ?? panic("Should have the value at last checkpoint")
@@ -202,6 +222,8 @@ pub contract VotingToken {
                 // TODO: Improve the logic here to calculate the voting power for a given checkpoint.
                 self.votingPower[at] ?? 0.0
             }
+
+            // Add the two together and return
             return  selfVotingPower + tempPower
         }
     }
@@ -220,23 +242,24 @@ pub contract VotingToken {
 
         pub fun mint(amount: UFix64, recepient: Capability<&AnyResource{Recevier}>)  {
             pre {
-                recepient.check() : "Not a valid capability"
-                amount > 0.0 : "Not allowed to mint 0 amount"
+                recepient.check() : "Not a valid token receiver capability"
             }
-            let ref = recepient.borrow()?? panic("Not able to borrow")
-            let token <- create Vault(balance:amount)
-            VotingToken.totalSupply = VotingToken.totalSupply + amount
-            ref.deposit(vault: <-token)
+            if amount > 0.0 {
+                let ref = recepient.borrow()?? panic("Unable to borrow reference to receipient capability")
+                let token <- create Vault(balance: amount)
+                VotingToken.totalSupply = VotingToken.totalSupply + amount
+                ref.deposit(vault: <-token)
+            }
         }
 
     }
 
-    /// Administrator resource that can create checkpoint
+    /// Administrator resource that can update the checkpoint counter
     pub resource Administrator {
-        /// Allow administrator to create the checkpoint.
+        /// Allow administrator to update the checkpoint counter
         pub fun createCheckpoint() {
-            VotingToken.checkpointId = VotingToken.checkpointId + 1
-            emit CheckPointCreated(newCheckpointId: VotingToken.checkpointId)
+            VotingToken.checkpointCounter = VotingToken.checkpointCounter + 1
+            emit CheckPointCreated(newCheckpointId: VotingToken.checkpointCounter)
         } 
     }
 
@@ -246,7 +269,7 @@ pub contract VotingToken {
         self.minterResourcePath = /storage/CadenceVotingTokenTutorialMinter
         self.administratorResourcePath = /storage/CadenceVotingTokenTutorialAdministrator
         self.totalSupply = 0.0
-        self.checkpointId = 0
+        self.checkpointCounter = 0
         let vault <- self.createEmptyVault()
         self.account.save(<- vault, to: self.vaultPath)
         self.account.save(<- create Minter(), to: self.minterResourcePath)

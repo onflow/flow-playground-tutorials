@@ -1,6 +1,6 @@
 // Transfer
 
-import ExampleNFT from 0x02
+import ExampleNFT from 0x01
 
 // This transaction transfers an NFT from one user's collection
 // to another user's collection.
@@ -9,7 +9,7 @@ transaction {
     // The field that will hold the NFT as it is being
     // transferred to the other account
     let transferToken: @ExampleNFT.NFT
-	
+
     prepare(acct: AuthAccount) {
 
         // Borrow a reference from the stored collection
@@ -23,7 +23,7 @@ transaction {
 
     execute {
         // Get the recipient's public account object
-        let recipient = getAccount(0x01)
+        let recipient = getAccount(0x02)
 
         // Get the Collection reference for the receiver
         // getting the public capability and borrowing a reference from it
@@ -34,7 +34,6 @@ transaction {
         // Deposit the NFT in the receivers collection
         receiverRef.deposit(token: <-self.transferToken)
 
-        log("NFT ID 1 transferred from account 2 to account 1")
+        log("NFT ID 1 transferred from account 1 to account 2")
     }
 }
- 

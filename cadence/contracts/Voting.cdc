@@ -1,4 +1,3 @@
-
 /*
 *
 *   In this example, we want to create a simple approval voting contract
@@ -23,10 +22,20 @@ import VotingToken from "./VotingToken.cdc"
 pub contract Voting {
 
     //list of proposals to be approved
-    pub var proposals: [String]
+    pub var proposals: [ProposalData]
 
     // number of votes per proposal
-    pub let votes: {Int: Int}
+    pub let votes: {Int: UFix64}
+
+    pub struct ProposalData {
+        pub let name: String
+        pub let blockTs: UFix64
+
+        init(name: String, blockTs: UFix64) {
+            self.name = name
+            self.blockTs = blockTs
+        }
+    }
 
     // This is the resource that is issued to users.
     // When a user gets a Ballot object, they call the `vote` function
@@ -35,30 +44,45 @@ pub contract Voting {
     pub resource Ballot {
 
         // array of all the proposals
-        pub let proposals: [String]
+        pub let proposals: [ProposalData]
 
         // corresponds to an array index in proposals after a vote
         pub var choices: {Int: Bool}
 
+        // corresponds to an array index in proposals after a vote
+        pub var choices2votingPower: {Int: UFix64}
+
         init() {
             self.proposals = Voting.proposals
             self.choices = {}
+            self.choices2votingPower = {}
 
             // Set each choice to false
             var i = 0
             while i < self.proposals.length {
-                self.choices[i] = false
+                self.choices[i] = nil
+                self.choices2votingPower[i] = 0.0
                 i = i + 1
             }
         }
 
         // modifies the ballot
         // to indicate which proposals it is voting for
-        pub fun vote(proposal: Int) {
+        pub fun vote(proposal: Int, votingPowerDataSnapshot: [VotingToken.VotingPowerData]) {
             pre {
                 self.proposals[proposal] != nil: "Cannot vote for a proposal that doesn't exist"
+                votingPowerDataSnapshot != nil && votingPowerDataSnapshot.length > 0: "Can only vote if balance exists"
+                votingPowerDataSnapshot[0].blockTs < self.proposals[proposal].blockTs: "Can only vote if balance was recorded before proposal was created"
+            }
+            var votingPower: VotingToken.VotingPowerData = votingPowerDataSnapshot[0]
+            var i = 0
+            while i < votingPowerDataSnapshot.length && 
+                votingPowerDataSnapshot[i].blockTs < self.proposals[proposal].blockTs {
+                votingPower = votingPowerDataSnapshot[i]
+                i = i + 1
             }
             self.choices[proposal] = true
+            self.choices2votingPower[proposal] = votingPower.vaultBalance
         }
     }
 
@@ -67,7 +91,7 @@ pub contract Voting {
     pub resource Administrator {
 
         // function to initialize all the proposals for the voting
-        pub fun initializeProposals(_ proposals: [String]) {
+        pub fun initializeProposals(_ proposals: [ProposalData]) {
             pre {
                 Voting.proposals.length == 0: "Proposals can only be initialized once"
                 proposals.length > 0: "Cannot initialize with no proposals"
@@ -77,12 +101,12 @@ pub contract Voting {
             // Set each tally of votes to zero
             var i = 0
             while i < proposals.length {
-                Voting.votes[i] = 0
+                Voting.votes[i] = 0.0
                 i = i + 1
             }
         }
 
-        // The admin calls this function to create a new Ballo
+        // The admin calls this function to create a new Ballot
         // that can be transferred to another user
         pub fun issueBallot(): @Ballot {
             return <-create Ballot()
@@ -97,7 +121,7 @@ pub contract Voting {
         while index < self.proposals.length {
             if ballot.choices[index]! {
                 // tally the vote if it is approved
-                self.votes[index] = self.votes[index]! + 1
+                self.votes[index] = self.votes[index]! + ballot.choices2votingPower[index]!
             }
             index = index + 1;
         }

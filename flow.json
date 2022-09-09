@@ -16,7 +16,7 @@
   },
   "deployments": {
     "emulator": {
-      "emulator-account": ["Voting"]
+      "emulator-account": ["VotingToken", "Voting"]
     }
   }
 }

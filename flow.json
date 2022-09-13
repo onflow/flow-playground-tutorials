@@ -9,9 +9,35 @@
     "testnet": "access.devnet.nodes.onflow.org:9000"
   },
   "accounts": {
+    "acct2": {
+      "address": "01cf0e2f2f715450",
+      "key": {
+        "type": "hex",
+        "index": 0,
+        "signatureAlgorithm": "ECDSA_P256",
+        "hashAlgorithm": "SHA3_256",
+        "privateKey": "PRIVATE_KEY_HERE"
+      }
+    },
+    "acct3": {
+      "address": "179b6b1cb6755e31",
+      "key": {
+        "type": "hex",
+        "index": 0,
+        "signatureAlgorithm": "ECDSA_P256",
+        "hashAlgorithm": "SHA3_256",
+        "privateKey": "PRIVATE_KEY_HERE"
+      }
+    },
     "emulator-account": {
       "address": "f8d6e0586b0a20c7",
-      "key": "8e9c05074abb937e5f265c92ce2b49d3774418f7b1dd6f9db3665eebd610ef25"
+      "key": {
+        "type": "hex",
+        "index": 0,
+        "signatureAlgorithm": "ECDSA_P256",
+        "hashAlgorithm": "SHA3_256",
+        "privateKey": "PRIVATE_KEY_HERE"
+      }
     }
   },
   "deployments": {

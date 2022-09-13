@@ -1,7 +1,7 @@
 {
   "contracts": {
-    "Voting": "./cadence/contracts/Voting.cdc",
-    "VotingToken": "./cadence/contracts/VotingToken.cdc"
+    "Voting": "./contracts/Voting.cdc",
+    "VotingToken": "./contracts/VotingToken.cdc"
   },
   "networks": {
     "emulator": "127.0.0.1:3569",

@@ -105,7 +105,7 @@ pub contract GovernanceToken: FungibleToken {
 
         // recordVotingWeight
         //
-        // private function to record voting weight of vault
+        // private function to record voting weight of vault at current block timestamp
         priv fun recordVotingWeight() {
             let ts = getCurrentBlock().timestamp
             self.votingWeightDataSnapshot.append(VotingWeightData(vaultBalance: self.balance, blockTs: ts))

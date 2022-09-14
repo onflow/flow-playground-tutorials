@@ -1,48 +1,42 @@
 {
-  "contracts": {
-    "Voting": "./contracts/Voting.cdc",
-    "VotingToken": "./contracts/VotingToken.cdc"
-  },
-  "networks": {
-    "emulator": "127.0.0.1:3569",
-    "mainnet": "access.mainnet.nodes.onflow.org:9000",
-    "testnet": "access.devnet.nodes.onflow.org:9000"
-  },
-  "accounts": {
-    "acct2": {
-      "address": "01cf0e2f2f715450",
-      "key": {
-        "type": "hex",
-        "index": 0,
-        "signatureAlgorithm": "ECDSA_P256",
-        "hashAlgorithm": "SHA3_256",
-        "privateKey": "PRIVATE_KEY_HERE"
-      }
-    },
-    "acct3": {
-      "address": "179b6b1cb6755e31",
-      "key": {
-        "type": "hex",
-        "index": 0,
-        "signatureAlgorithm": "ECDSA_P256",
-        "hashAlgorithm": "SHA3_256",
-        "privateKey": "PRIVATE_KEY_HERE"
-      }
-    },
-    "emulator-account": {
-      "address": "f8d6e0586b0a20c7",
-      "key": {
-        "type": "hex",
-        "index": 0,
-        "signatureAlgorithm": "ECDSA_P256",
-        "hashAlgorithm": "SHA3_256",
-        "privateKey": "PRIVATE_KEY_HERE"
-      }
-    }
-  },
-  "deployments": {
-    "emulator": {
-      "emulator-account": ["VotingToken", "Voting"]
-    }
-  }
+	"contracts": {
+		"FungibleToken": {
+			"source": "./contracts/FungibleToken.cdc",
+			"aliases": {
+				"emulator": "0xee82856bf20e2aa6",
+				"mainnet": "0xf233dcee88fe0abe",
+				"testnet": "0x9a0766d93b6608b7"
+			}
+		},
+		"GovernanceToken": "./contracts/GovernanceToken.cdc",
+		"Voting": "./contracts/Voting.cdc"
+	},
+	"networks": {
+		"emulator": "127.0.0.1:3569",
+		"mainnet": "access.mainnet.nodes.onflow.org:9000",
+		"testnet": "access.devnet.nodes.onflow.org:9000"
+	},
+	"accounts": {
+		"acct2": {
+			"address": "01cf0e2f2f715450",
+			"key": "924c796d293a5fef3bc8f2040fa91bb7a48fb7b6e362d6a585161e5b2c61e1d9"
+		},
+		"acct3": {
+			"address": "179b6b1cb6755e31",
+			"key": "d8bdaa8a5aca3481acf595ebb2f17d6e7d2dbf6344e12775b9d578acb576076a"
+		},
+		"emulator-account": {
+			"address": "f8d6e0586b0a20c7",
+			"key": "39353f597de2bed6781760838a62536374bfff46b8efac5ebb450825debdd778"
+		}
+	},
+	"deployments": {
+		"emulator": {
+			"emulator-account": [
+				"FungibleToken",
+				"GovernanceToken",
+				"Voting"
+			]
+		}
+	}
 }

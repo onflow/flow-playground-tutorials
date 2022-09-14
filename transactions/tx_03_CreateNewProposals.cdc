@@ -1,10 +1,9 @@
+// CreateNewProposals
+
 import Voting from 0xf8d6e0586b0a20c7
 
-// Transaction1.cdc
-//
 // This transaction allows the administrator of the Voting contract
 // to create new proposals for voting and save them to the smart contract
-
 transaction {
     prepare(admin: AuthAccount) {
 

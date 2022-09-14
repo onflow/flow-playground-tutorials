@@ -1,33 +1,19 @@
+// SelectAndCastVotes
+
 import Voting from 0xf8d6e0586b0a20c7
-import VotingToken from 0xf8d6e0586b0a20c7
+import GovernanceToken from 0xf8d6e0586b0a20c7
 
-// Transaction3.cdc
-//
-// This transaction allows a voter to select the votes they would like to make
-// and cast that vote by using the castVote function
-// of the Voting smart contract
-
-transaction {
+// This transaction allows a voter to select a proposal via its id and vote for it
+transaction (proposalId: Int) {
     prepare(voter: AuthAccount) {
-
-        // take the voter's ballot out of storage
-        let vaultRef = voter.borrow<&VotingToken.Vault>(from: VotingToken.VaultStoragePath)
-            ?? panic("Could not borrow a reference to the voter's vault")
-
         let ballot <- voter.load<@Voting.Ballot>(from: Voting.ballotStoragePath)
             ?? panic("Could not load the voter's ballot")
 
-        log("vaultRef.votingPowerDataSnapshot:")
-        log(vaultRef.votingPowerDataSnapshot)
-        
         // Vote on the proposal
-        //ballot.vote(proposal: 0, votingPowerDataSnapshot: vaultRef.votingPowerDataSnapshot)
-        ballot.vote(proposal: 1, votingPowerDataSnapshot: vaultRef.votingPowerDataSnapshot)
-        log("ballot choices:")
-        log(ballot.choices)
+        ballot.vote(proposalId: proposalId,)
 
-        // Cast the vote by submitting it to the smart contract
-        Voting.cast(ballot: <-ballot)
+        // destroy resource
+        destroy ballot
 
         log("Vote cast and tallied")
     }

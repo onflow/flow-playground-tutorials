@@ -1,24 +1,24 @@
+// CreateNewBallot
+
 import Voting from 0xf8d6e0586b0a20c7
+import GovernanceToken from 0xf8d6e0586b0a20c7
 
-// Transaction2.cdc
-//
-// This transaction allows the administrator of the Voting contract
+
+// This transaction allows the voter with goverance token vault
 // to create a new ballot and store it in a voter's account
-// The voter and the administrator have to both sign the transaction
-// so it can access their storage
-
 transaction () {
-    prepare(admin: AuthAccount, voter: AuthAccount) {
+    prepare(voter: AuthAccount) {
 
-        // borrow a reference to the admin Resource
-        let adminRef = admin.borrow<&Voting.Administrator>(from: Voting.adminStoragePath)!
+        //getAccount(self.account.address).getCapability<&GovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, //GovernanceToken.VotingWeight}>(GovernanceToken.VaultPublicPath)
 
-        // create a new Ballot by calling the issueBallot
-        // function of the admin Reference
-        let ballot <- adminRef.issueBallot()
+        // borrow a reference from the voter's GovToken Vault
+        let vaultRef = voter.getCapability<&GovernanceToken.Vault{GovernanceToken.VotingWeight}>(GovernanceToken.VaultPublicPath)
+
+        // create a new Ballot by calling the issueBallot function
+        let ballot <- Voting.issueBallot(recipientCap: vaultRef)
 
         // store that ballot in the voter's account storage
-        voter.save(<-ballot, to: Voting.ballotStoragePath)
+        voter.save<@Voting.Ballot>(<-ballot, to: Voting.ballotStoragePath)
 
         log("Ballot transferred to voter")
     }

@@ -1,91 +1,92 @@
 /*
 *
-*   In this example, we want to create a simple approval voting contract
+*   In this example, we want to create a simple voting contract
 *   where a polling place issues ballots to addresses.
 *
 *   The run a vote, the Admin deploys the smart contract,
-*   then initializes the proposals
-*   using the initialize_proposals.cdc transaction.
+*   then initializes the proposals.
 *   The array of proposals cannot be modified after it has been initialized.
 *
-*   Then they will give ballots to users by
-*   using the issue_ballot.cdc transaction.
+*   Users can create ballots and vote only with their GovernanceToken balance prior to when
+*   proposal was created.
 *
 *   Every user with a ballot is allowed to approve any number of proposals.
 *   A user can choose their votes and cast them
-*   with the cast_vote.cdc transaction.
+*   with the tx_05_SelectAndCastVots.cdc transaction.
 *
 */
 
-import VotingToken from "./VotingToken.cdc"
+import GovernanceToken from "./GovernanceToken.cdc"
 
 pub contract Voting {
 
-    //list of proposals to be approved
+    // list of proposals to be approved
     pub var proposals: [ProposalData]
 
-    // sum weight of votes per proposal
-    pub let votes: {Int: UFix64}
-
+    // paths
     pub let adminStoragePath: StoragePath
     pub let ballotStoragePath: StoragePath
+    pub let ballotPublicPath: PublicPath
 
     pub struct ProposalData {
         pub let name: String
         pub let blockTs: UFix64
+        pub(set) var votes: UFix64
+        pub(set) var voters: {UInt64: Bool}
 
         init(name: String, blockTs: UFix64) {
             self.name = name
             self.blockTs = blockTs
+            self.votes = 0.0
+            self.voters = {}
         }
+    }
+
+    pub resource interface Votable {
+        pub fun vote(proposalId: Int)
     }
 
     // This is the resource that is issued to users.
     // When a user gets a Ballot object, they call the `vote` function
-    // to include their votes, and then cast it in the smart contract
-    // using the `cast` function to have their vote included in the polling
-    pub resource Ballot {
+    // to include their votes
+    pub resource Ballot: Votable {
+        // id of GovernanceToken Vault
+        pub let vaultId: UInt64
+        // array of GovernanceToken Vault's votingWeightDataSnapshot
+        pub let votingWeightDataSnapshot: [GovernanceToken.VotingWeightData]
 
-        // array of all the proposals
-        pub let proposals: [ProposalData]
 
-        // corresponds to an array index in proposals after a vote
-        pub var choices: {Int: Bool}
+        priv let recipient: &GovernanceToken.Vault{GovernanceToken.VotingWeight}
 
-        // corresponds to an array index in proposals after a vote
-        pub var choices2votingPower: {Int: UFix64}
+        init(recipientCap: Capability<&GovernanceToken.Vault{GovernanceToken.VotingWeight}>) {
 
-        init() {
-            self.proposals = Voting.proposals
-            self.choices = {}
-            self.choices2votingPower = {}
+            let recipientRef = recipientCap.borrow() ?? panic("Could not borrow VotingWeight reference from the Capability")
 
-            // Set each choice to false
-            var i = 0
-            while i < self.proposals.length {
-                self.choices[i] = nil
-                self.choices2votingPower[i] = 0.0
-                i = i + 1
-            }
+            self.recipient = recipientRef
+            self.vaultId = recipientRef.vaultId
+            self.votingWeightDataSnapshot = recipientRef.votingWeightDataSnapshot
         }
 
-        // modifies the ballot
-        // to indicate which proposals it is voting for
-        pub fun vote(proposal: Int, votingPowerDataSnapshot: [VotingToken.VotingPowerData]) {
+        // Tallies the vote to indicate which proposal the vote is for
+        pub fun vote(proposalId: Int) {
             pre {
-                self.proposals[proposal] != nil: "Cannot vote for a proposal that doesn't exist"
-                votingPowerDataSnapshot != nil && votingPowerDataSnapshot.length > 0: "Can only vote if balance exists"
-                votingPowerDataSnapshot[0].blockTs < self.proposals[proposal].blockTs: "Can only vote if balance was recorded before proposal was created"
+                Voting.proposals[proposalId] != nil: "Cannot vote for a proposal that doesn't exist"
+                Voting.proposals[proposalId].voters[self.vaultId] == nil: "Cannot cast vote again using same Governance Token Vault"
+                self.votingWeightDataSnapshot != nil && self.votingWeightDataSnapshot.length > 0: "Can only vote if balance exists"
+                self.votingWeightDataSnapshot[0].blockTs < Voting.proposals[proposalId].blockTs: "Can only vote if balance was recorded before proposal was created"
             }
-            var votingPower: VotingToken.VotingPowerData = votingPowerDataSnapshot[0]
-            var i = 0
-            while i < votingPowerDataSnapshot.length &&
-                votingPowerDataSnapshot[i].blockTs < self.proposals[proposal].blockTs {
-                votingPower = votingPowerDataSnapshot[i]
-                i = i + 1
+            var votingWeight: GovernanceToken.VotingWeightData = self.votingWeightDataSnapshot[0]
+
+            for votingWeightData in self.votingWeightDataSnapshot {
+                if votingWeightData.blockTs <= Voting.proposals[proposalId].blockTs {
+                    votingWeight = votingWeightData
+                } else {
+                    break
+                }
             }
-            self.choices[proposal] = true
-            self.choices2votingPower[proposal] = votingPower.vaultBalance
+
+            Voting.proposals[proposalId].votes = Voting.proposals[proposalId].votes + votingWeight.vaultBalance
+            Voting.proposals[proposalId].voters[self.vaultId] = true
         }
     }
 
@@ -100,45 +101,28 @@ pub contract Voting {
                 proposals.length > 0: "Cannot initialize with no proposals"
             }
             Voting.proposals = proposals
-
-            // Set each tally of votes to zero
-            var i = 0
-            while i < proposals.length {
-                Voting.votes[i] = 0.0
-                i = i + 1
-            }
         }
 
-        // The admin calls this function to create a new Ballot
-        // that can be transferred to another user
-        pub fun issueBallot(): @Ballot {
-            return <-create Ballot()
-        }
     }
 
-    // A user moves their ballot to this function in the contract where
-    // its votes are tallied and the ballot is destroyed
-    pub fun cast(ballot: @Ballot) {
-        var index = 0
-        // look through the ballot
-        while index < self.proposals.length {
-            if ballot.choices[index]! {
-                // tally the vote if it is approved
-                self.votes[index] = self.votes[index]! + ballot.choices2votingPower[index]!
-            }
-            index = index + 1;
-        }
-        // Destroy the ballot because it has been tallied
-        destroy ballot
+    // Creates a new Ballot
+    pub fun issueBallot(recipientCap: Capability<&GovernanceToken.Vault{GovernanceToken.VotingWeight}>): @Ballot {
+        return <-create Ballot(recipientCap: recipientCap)
     }
 
     // initializes the contract by setting the proposals and votes to empty
     // and creating a new Admin resource to put in storage
     init() {
         self.proposals = []
-        self.votes = {}
-        self.adminStoragePath = /storage/VotingAdmin
-        self.account.save<@Administrator>(<-create Administrator(), to: self.adminStoragePath)
+
         self.ballotStoragePath = /storage/Ballot
+        self.adminStoragePath = /storage/VotingAdmin
+        self.ballotPublicPath = /public/Ballot
+
+        self.account.save<@Administrator>(<-create Administrator(), to: self.adminStoragePath)
+
+        // Create a public capability to Voting.Ballot
+        //
+        self.account.link<&Voting.Ballot>(self.ballotPublicPath, target: self.ballotStoragePath)
     }
 }

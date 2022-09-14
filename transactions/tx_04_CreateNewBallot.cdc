@@ -11,7 +11,7 @@ transaction () {
 
         //getAccount(self.account.address).getCapability<&GovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, //GovernanceToken.VotingWeight}>(GovernanceToken.VaultPublicPath)
 
-        // borrow a reference from the voter's GovToken Vault
+        // borrow a reference from the voter's GovernanceToken Vault
         let vaultRef = voter.getCapability<&GovernanceToken.Vault{GovernanceToken.VotingWeight}>(GovernanceToken.VaultPublicPath)
 
         // create a new Ballot by calling the issueBallot function

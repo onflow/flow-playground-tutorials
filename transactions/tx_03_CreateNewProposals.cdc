@@ -13,9 +13,9 @@ transaction {
         let ts = getCurrentBlock().timestamp
         let proposal1 = Voting.ProposalData(name: "Longer Shot Clock", blockTs: ts)
         let proposal2 = Voting.ProposalData(name: "Trampolines instead of hardwood floors", blockTs: ts)
+        
         // Call the initializeProposals function
         // to create the proposals array as an array of ProposolData
-
         adminRef.initializeProposals(
             [proposal1, proposal2]
         )

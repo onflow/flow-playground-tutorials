@@ -24,8 +24,13 @@ pub contract BasicNFT {
         }
     }
 
+    // Function to create a new NFT
+    pub fun createNFT(id: UInt64): @NFT {
+        return <-create NFT(initID: id)
+    }
+
     // Create a single new NFT and save it to account storage
-	init() {
-		self.account.save<@NFT>(<-create NFT(initID: 1), to: /storage/BasicNFTPath)
-	}
+    init() {
+        self.account.save<@NFT>(<-create NFT(initID: 1), to: /storage/BasicNFTPath)
+    }
 }

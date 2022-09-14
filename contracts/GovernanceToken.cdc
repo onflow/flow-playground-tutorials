@@ -28,8 +28,8 @@ pub contract GovernanceToken: FungibleToken {
     // Event that is emitted when new tokens are minted
     pub event TokensMinted(amount: UFix64)
 
-    // Records voting weight data at for a given block timestamp snapshot
-    // used to provide voting weight when voting for a proposal.
+    // Records voting weight data at a given block timestamp snapshot.
+    // Used to provide voting weight when voting for a proposal.
     //
     pub struct VotingWeightData {
         pub let vaultBalance: UFix64
@@ -58,7 +58,7 @@ pub contract GovernanceToken: FungibleToken {
 
         // keeps track of the total balance of the account's tokens
         pub var balance: UFix64
-        // add an id or the vault for ease in checking whether vote has already been cast
+        // add an id for the vault for ease in checking whether vote has already been cast
         pub let vaultId: UInt64
         // keeps track of user's voting power
         pub let votingWeightDataSnapshot: [VotingWeightData]

@@ -12,7 +12,7 @@
 *
 *   Every user with a ballot is allowed to approve any number of proposals.
 *   A user can choose their votes and cast them
-*   with the tx_05_SelectAndCastVots.cdc transaction.
+*   with the tx_05_SelectAndCastVotes.cdc transaction.
 *
 */
 
@@ -43,7 +43,17 @@ pub contract Voting {
     }
 
     pub resource interface Votable {
-        pub fun vote(proposalId: Int)
+        pub vaultId: UInt64
+        pub votingWeightDataSnapshot: [GovernanceToken.VotingWeightData]
+
+        pub fun vote(proposalId: Int){
+            pre {
+                Voting.proposals[proposalId] != nil: "Cannot vote for a proposal that doesn't exist"
+                Voting.proposals[proposalId].voters[self.vaultId] == nil: "Cannot cast vote again using same Governance Token Vault"
+                self.votingWeightDataSnapshot != nil && self.votingWeightDataSnapshot.length > 0: "Can only vote if balance exists"
+                self.votingWeightDataSnapshot[0].blockTs < Voting.proposals[proposalId].blockTs: "Can only vote if balance was recorded before proposal was created"
+            }
+        }
     }
 
     // This is the resource that is issued to users.
@@ -54,7 +64,6 @@ pub contract Voting {
         pub let vaultId: UInt64
         // array of GovernanceToken Vault's votingWeightDataSnapshot
         pub let votingWeightDataSnapshot: [GovernanceToken.VotingWeightData]
-
 
         priv let recipient: &GovernanceToken.Vault{GovernanceToken.VotingWeight}
 
@@ -69,12 +78,6 @@ pub contract Voting {
 
         // Tallies the vote to indicate which proposal the vote is for
         pub fun vote(proposalId: Int) {
-            pre {
-                Voting.proposals[proposalId] != nil: "Cannot vote for a proposal that doesn't exist"
-                Voting.proposals[proposalId].voters[self.vaultId] == nil: "Cannot cast vote again using same Governance Token Vault"
-                self.votingWeightDataSnapshot != nil && self.votingWeightDataSnapshot.length > 0: "Can only vote if balance exists"
-                self.votingWeightDataSnapshot[0].blockTs < Voting.proposals[proposalId].blockTs: "Can only vote if balance was recorded before proposal was created"
-            }
             var votingWeight: GovernanceToken.VotingWeightData = self.votingWeightDataSnapshot[0]
 
             for votingWeightData in self.votingWeightDataSnapshot {

@@ -1,10 +1,7 @@
 import FungibleToken from 0xf8d6e0586b0a20c7
 import GovernanceToken from 0xf8d6e0586b0a20c7
 
-pub fun main(account1: Address, account2: Address) {
-  //let votingWeight = GovernanceToken.getRelativeBalance()
-  //return votingWeight
-
+pub fun main(account1: Address, account2: Address): [{String: AnyStruct}] {
   let acct1 = getAccount(account1)
   let acct2 = getAccount(account2)
 
@@ -49,4 +46,14 @@ pub fun main(account1: Address, account2: Address) {
     log(acct2WeightLastItem?.vaultBalance)
     log("Account 2 ts")
     log(acct2WeightLastItem?.blockTs)
+
+    return [
+      {"acct1BalanceRefBalance": acct1BalanceRef.balance},
+      {"acct2BalanceRefBalance": acct2BalanceRef.balance},
+      {"GovernanceTokenTotalSupply": GovernanceToken.totalSupply},
+      {"acct1WeightLastItem?.vaultBalance": acct1WeightLastItem?.vaultBalance},
+      {"acct1WeightLastItem?.blockTs": acct1WeightLastItem?.blockTs},
+      {"acct2WeightLastItem?.vaultBalance": acct2WeightLastItem?.vaultBalance},
+      {"acct2WeightLastItem?.blockTs": acct2WeightLastItem?.blockTs}
+    ]
 }

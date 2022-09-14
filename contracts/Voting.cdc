@@ -10,7 +10,7 @@
 *   Users can create ballots and vote only with their GovernanceToken balance prior to when
 *   proposal was created.
 *
-*   Every user with a ballot is allowed to approve any number of proposals.
+*   Every user with a ballot is allowed to approve their chosen proposals.
 *   A user can choose their votes and cast them
 *   with the tx_05_SelectAndCastVotes.cdc transaction.
 *
@@ -57,7 +57,7 @@ pub contract Voting {
     }
 
     // This is the resource that is issued to users.
-    // When a user gets a Ballot object, they call the `vote` function
+    // When a user gets a Ballot resource, they call the `vote` function
     // to include their votes
     pub resource Ballot: Votable {
         // id of GovernanceToken Vault
@@ -65,13 +65,10 @@ pub contract Voting {
         // array of GovernanceToken Vault's votingWeightDataSnapshot
         pub let votingWeightDataSnapshot: [GovernanceToken.VotingWeightData]
 
-        priv let recipient: &GovernanceToken.Vault{GovernanceToken.VotingWeight}
 
         init(recipientCap: Capability<&GovernanceToken.Vault{GovernanceToken.VotingWeight}>) {
-
             let recipientRef = recipientCap.borrow() ?? panic("Could not borrow VotingWeight reference from the Capability")
 
-            self.recipient = recipientRef
             self.vaultId = recipientRef.vaultId
             self.votingWeightDataSnapshot = recipientRef.votingWeightDataSnapshot
         }

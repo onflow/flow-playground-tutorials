@@ -1,5 +1,5 @@
 // Mint Tokens
-import FungibleToken from 0xee82856bf20e2aa6
+import FungibleToken from 0xf8d6e0586b0a20c7
 import GovernanceToken from 0xf8d6e0586b0a20c7
 
 // This transaction mints tokens and deposits them into the receiver account's vault
@@ -28,11 +28,11 @@ transaction (recipient1: Address, recipient2: Address, amountRecipient1: UFix64,
     }
 
     execute {
-        // Mint 30 tokens and deposit them into the recipient1's Vault
+        // Mint tokens and deposit them into the recipient1's Vault
         self.mintingRef.mintTokens(amount: amountRecipient1, recipient: self.receiver1)
-        log("30 tokens minted and deposited to account recipient1")
-        // Mint 150 tokens and deposit them into the recipient2's Vault
+        log("tokens minted and deposited to account recipient1")
+        // Mint tokens and deposit them into the recipient2's Vault
         self.mintingRef.mintTokens(amount: amountRecipient2, recipient: self.receiver2)
-        log("150 tokens minted and deposited to account recipient2")
+        log("tokens minted and deposited to account recipient2")
     }
 }

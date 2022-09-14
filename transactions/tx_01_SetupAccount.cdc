@@ -1,6 +1,6 @@
 // Setup Account
 
-import FungibleToken from 0xee82856bf20e2aa6
+import FungibleToken from 0xf8d6e0586b0a20c7
 import GovernanceToken from 0xf8d6e0586b0a20c7
 
 // This transaction configures an account to store and receive tokens defined by

@@ -1,6 +1,6 @@
 {
   "contracts": {
-    "KittyVerse": "./contracts/KittyVerse.cdc"
+    "BestPizzaPlace": "./contracts/BestPizzaPlace.cdc"
   },
   "networks": {
     "emulator": "127.0.0.1:3569",
@@ -15,7 +15,7 @@
   },
   "deployments": {
     "emulator": {
-      "emulator-account": ["KittyVerse"]
+      "emulator-account": ["BestPizzaPlace"]
     }
   }
 }

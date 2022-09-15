@@ -8,8 +8,6 @@ pub contract BestPizzaPlace {
 
     pub resource interface Ingredient {
         pub name: String
-
-        pub fun toString(): String
     }
 
     pub enum Spiciness: UInt8 {
@@ -22,17 +20,15 @@ pub contract BestPizzaPlace {
         pub let name: String
         pub let spiciness: Spiciness
 
-        
-
         init(name: String, spiciness: Spiciness) {
             self.name = name
             self.spiciness = spiciness
         }
 
-        pub fun toString(): String {
+        pub fun getSpiciness(): String {
             let spicinessPossibilities = {Spiciness.mild : "mild", Spiciness.medium : "medium", Spiciness.hot : "hot"}
             let spicinessString: String = spicinessPossibilities[self.spiciness]!
-            return spicinessString.concat(" ").concat(self.name)
+            return spicinessString
         }
     }
 
@@ -47,10 +43,6 @@ pub contract BestPizzaPlace {
         init(name: String, addBeforeBaking: Bool) {
             self.name = name
             self.addBeforeBaking = addBeforeBaking
-        }
-
-        pub fun toString(): String {
-             return self.name
         }
     }
 
@@ -72,54 +64,69 @@ pub contract BestPizzaPlace {
             self.name = name
             self.timeToBake = timeToBake
         }
-
-        pub fun toString(): String {
-             return self.name
-        }
     }
 
     pub fun createDough(grain: Grain, timeToBake: UInt): @Dough {
-        let doughNames = {Grain.wheat: "wheat dough", Grain.rye : "medirye dough", Grain.spelt : "spelt dough"}
+        let doughNames = {Grain.wheat: "wheat dough", Grain.rye : "rye dough", Grain.spelt : "spelt dough"}
         let name: String = doughNames[grain]!
         return <-create Dough(name: name, timeToBake: timeToBake)
     }
 
     pub resource Pizza {
         pub let name: String
-        pub let ingredients: @[AnyResource{Ingredient}]
+        pub let dough: @Dough
+        pub let sauce: @Sauce
+        pub let toppings: @[Topping]
 
-        init(name: String) {
+        init(name: String, dough: @Dough, sauce: @Sauce) {
             self.name = name
-            self.ingredients <- []
+            self.dough <- dough
+            self.sauce <- sauce
+            self.toppings <- []
         }
 
-        pub fun addIngredient(newIngredient: @AnyResource{Ingredient}) {
-           self.ingredients.append(<- newIngredient)
+        pub fun addTopping(topping: @Topping) {
+           self.toppings.append(<- topping)
         }
 
-        pub fun toString(): String {
-            var description: String = "This is a ".concat(self.name).concat(" pizza")
+        pub fun showOrder(): Order {
+            let toppingNames: [String] = []
             //iteration is a bit special because of https://github.com/onflow/cadence/issues/704
             var i = 0
-            while i < self.ingredients.length {
-              if(i == 0) {
-                  description = description.concat(" with ")
-              } else {
-                  description = description.concat(" and ")
-              }
-              let ingredientRef = &self.ingredients[i] as &AnyResource{Ingredient}
-              description = description.concat(ingredientRef.toString())
+            while i < self.toppings.length {
+              let toppingRef = &self.toppings[i] as &Topping
+              toppingNames.append(toppingRef.name)
               i = i + 1
             }
-            return description
+            return Order(pizzaName: self.name, dough: self.dough.name, timeToBake: self.dough.timeToBake, sauceType: self.sauce.name, spiciness: self.sauce.getSpiciness(), toppings: toppingNames)
         }
 
         destroy() {
-            destroy self.ingredients
+            destroy self.dough
+            destroy self.sauce
+            destroy self.toppings
         }
     }
 
-    pub fun createPizza(name: String): @Pizza {
-        return <-create Pizza(name: name)
+    pub fun createPizza(name: String, dough: @Dough, sauce: @Sauce): @Pizza {
+        return <-create Pizza(name: name, dough: <-dough, sauce: <-sauce)
+    }
+
+    pub struct Order {
+        pub var pizzaName: String
+        pub var dough: String
+        pub var timeToBake: UInt
+        pub var sauceType: String
+        pub var spiciness: String
+        pub var toppings: [String]
+
+        init(pizzaName: String, dough: String, timeToBake: UInt, sauceType: String, spiciness: String, toppings: [String]) {
+            self.pizzaName = pizzaName
+            self.dough = dough
+            self.timeToBake = timeToBake
+            self.sauceType = sauceType
+            self.spiciness = spiciness
+            self.toppings = toppings
+        }
     }
 }

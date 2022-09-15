@@ -1,68 +1,30 @@
-# Repository template
-A template enabled repository, including all necesary files to open source
+10. Composable Resources
+In this tutorial, we're going to walk through how resources can own other resources.
 
-(create an issue with the following content if you want to track the repo configuration)
-## Repository settings and configuration
-- [ ]  Repository info
-    - [ ]  Add repo description
-    - [ ]  Update website to https://onflow.org
-    - [ ]  Add relevant repository topics (i.e. `blockchain` `onflow`, etc)
-- [ ]  Define merge workflow
-    - [ ]  `main` branch rule:
-        - [ ]  **Require pull request reviews before merging (1 approving review)**
-            - [ ]  **Require review from Code Owners**
-        - [ ]  **Require status checks to pass before merging**
-            - [ ]  **Require branches to be up to date before merging**
-        - [ ]  **Require linear history**
-        - [ ]   **Restrict who can push to matching branches**
-            - [ ]  Choose `onflow/flow` team
+Resources owning other resources is a powerful feature in the world of blockchain and smart contracts. To showcase how this feature works on Flow, this tutorial will take you through these steps with a pizza resource composed of ingredient resources:
 
-- [ ]  Add necessary team members, adjust access levels
-    - [ ]  `onflow/flow-admin` ⇒ Admin access
-    - [ ]  `onflow/flow` ⇒ Write access
+Deploy the Pizza, Dough, Sauce and Topping definitions to the emulator-account.
+Create a Pizza with Sauce and multiple Topping and store it in your account.
+Get the Pizza ingredient description without moving the resource.
 
-- Add issue tags
-    - [ ] Architecture
-    - [ ] Backend
-    - [ ] Breaking Change
-    - [ ] Dev Portal Documentation
-    - [ ] Epic
-    - [ ] Feature
-    - [ ] Feedback
-    - [ ] Frontend
-    - [ ] improvement
-    - [ ] integration testing
-    - [ ] Metadata View
-    - [ ] MoSCoW - Must
-    - [ ] MoSCoW - Should
-    - [ ] MoSCoW - Could
-    - [ ] MoSCoW - Would
-    - [ ] Needs Definition
-    - [ ] Needs Estimation
-    - [ ] Needs Test Cases
-    - [ ] P-High
-    - [ ] P-Low
-    - [ ] P-Medium
-    - [ ] question
-    - [ ] S-Access
-    - [ ] S-Client
-    - [ ] S-Collection
-    - [ ] S-Common
-    - [ ] S-Consensus
-    - [ ] S-Cryptography
-    - [ ] S-Emulator
-    - [ ] S-Execution
-    - [ ] S-FCL
-    - [ ] S-Go SDK
-    - [ ] S-Infrastructure
-    - [ ] S-JS-SDK
-    - [ ] S-Language
-    - [ ] S-Network Layer
-    - [ ] S-Playground
-    - [ ] S-PostExecution
-    - [ ] S-Semantics
-    - [ ] S-Verification
-    - [ ] T-Bug
-    - [ ] T-Documentation 📃
-    - [ ] T-Meta
-    - [ ] Technical Debt
+Take these steps:
+
+Run the emulator
+
+```console
+flow emulator
+```
+Deploy the project in another window
+```console
+flow project deploy
+```
+
+Prepare the pizza:
+```console
+flow transactions send transactions/PreparePizza.cdc --signer emulator-account
+```
+
+Check the order:
+```console
+flow scripts execute scripts/ShowOrder.cdc
+```

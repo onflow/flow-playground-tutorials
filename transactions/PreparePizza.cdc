@@ -1,5 +1,7 @@
 import BestPizzaPlace from 0xf8d6e0586b0a20c7
 
+// This transaction creates a pizza resource and moves it to the account storage.
+// It also creates a capability in order to check the order later.
 transaction {
     let account: AuthAccount
 
@@ -15,7 +17,9 @@ transaction {
         pizza.addTopping(topping: <-topping1)
         pizza.addTopping(topping: <-topping2)
 
+        // Store the pizza
         acct.save<@BestPizzaPlace.Pizza>(<-pizza, to: BestPizzaPlace.PizzaStoragePath)
+        // Link capability reference
         acct.link<&BestPizzaPlace.Pizza>(BestPizzaPlace.PizzaPublicPath, target: BestPizzaPlace.PizzaStoragePath)
 
         self.account = acct

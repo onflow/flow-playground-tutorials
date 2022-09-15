@@ -1,5 +1,11 @@
+/*
+*   This is an example on how to compose resources.
+*   It shows the need for implementing the 'destroy' method and for calling it.
+*   It also allows to get information about the pizza ingredients without moving the resource.
+*/
 pub contract BestPizzaPlace {
 
+    // paths
     pub let PizzaStoragePath: StoragePath
     pub let PizzaPublicPath: PublicPath
 
@@ -12,6 +18,7 @@ pub contract BestPizzaPlace {
         pub name: String
     }
 
+    // used for the sauce
     pub enum Spiciness: UInt8 {
       pub case mild
       pub case medium
@@ -114,6 +121,7 @@ pub contract BestPizzaPlace {
         return <-create Pizza(name: name, dough: <-dough, sauce: <-sauce)
     }
 
+    // used to inform about the pizza ingredients
     pub struct Order {
         pub var pizzaName: String
         pub var dough: String

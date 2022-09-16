@@ -9,11 +9,6 @@ pub contract BestPizzaPlace {
     pub let PizzaStoragePath: StoragePath
     pub let PizzaPublicPath: PublicPath
 
-    init() {
-        self.PizzaStoragePath = /storage/pizza
-        self.PizzaPublicPath = /public/pizza
-    }
-
     pub resource interface Ingredient {
         pub name: String
     }
@@ -138,5 +133,10 @@ pub contract BestPizzaPlace {
             self.spiciness = spiciness
             self.toppings = toppings
         }
+    }
+
+    init() {
+        self.PizzaStoragePath = /storage/pizza
+        self.PizzaPublicPath = /public/pizza
     }
 }

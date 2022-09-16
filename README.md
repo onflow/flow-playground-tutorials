@@ -12,7 +12,7 @@ Create two extra accounts ('acct2', 'acct3')
 flow accounts create
 ```
 
-Once you are in flow.json, make sure that the deployment section contains 'FungibleToken', 'GovernanceToken' and 'Voting'.
+Make sure that the deployment section in 'flow.json' contains 'FungibleToken', 'GovernanceToken' and 'Voting'.
 
 Create the voter accounts:
 ```console

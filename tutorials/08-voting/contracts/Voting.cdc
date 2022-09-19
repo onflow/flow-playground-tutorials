@@ -30,13 +30,13 @@ pub contract Voting {
 
     pub struct ProposalData {
         pub let name: String
-        pub let blockTs: UFix64
+        pub let checkpoint: UInt16
         pub(set) var votes: UFix64
         pub(set) var voters: {UInt64: Bool}
 
-        init(name: String, blockTs: UFix64) {
+        init(name: String) {
             self.name = name
-            self.blockTs = blockTs
+            self.checkpoint = GovernanceToken.checkpointCounter
             self.votes = 0.0
             self.voters = {}
         }
@@ -51,7 +51,7 @@ pub contract Voting {
                 Voting.proposals[proposalId] != nil: "Cannot vote for a proposal that doesn't exist"
                 Voting.proposals[proposalId].voters[self.vaultId] == nil: "Cannot cast vote again using same Governance Token Vault"
                 self.votingWeightDataSnapshot != nil && self.votingWeightDataSnapshot.length > 0: "Can only vote if balance exists"
-                self.votingWeightDataSnapshot[0].blockTs < Voting.proposals[proposalId].blockTs: "Can only vote if balance was recorded before proposal was created"
+                self.votingWeightDataSnapshot[0].checkpoint < Voting.proposals[proposalId].checkpoint: "Can only vote if balance was recorded before proposal was created"
             }
         }
     }
@@ -78,7 +78,7 @@ pub contract Voting {
             var votingWeight: GovernanceToken.VotingWeightData = self.votingWeightDataSnapshot[0]
 
             for votingWeightData in self.votingWeightDataSnapshot {
-                if votingWeightData.blockTs <= Voting.proposals[proposalId].blockTs {
+                if votingWeightData.checkpoint <= Voting.proposals[proposalId].checkpoint {
                     votingWeight = votingWeightData
                 } else {
                     break
@@ -95,14 +95,19 @@ pub contract Voting {
     pub resource Administrator {
 
         // function to initialize all the proposals for the voting
-        pub fun initializeProposals(_ proposals: [ProposalData]) {
+        // TODO: allow to create proposals more than once
+        pub fun initializeProposals(proposals: [String]) {
             pre {
                 Voting.proposals.length == 0: "Proposals can only be initialized once"
                 proposals.length > 0: "Cannot initialize with no proposals"
             }
-            Voting.proposals = proposals
+            GovernanceToken.checkpointCounter = GovernanceToken.checkpointCounter + 1
+            let newProposals: [ProposalData] = []
+            for proposal in proposals {
+                newProposals.append(ProposalData(name: proposal))
+            }
+            Voting.proposals = newProposals
         }
-
     }
 
     // Creates a new Ballot
@@ -122,7 +127,6 @@ pub contract Voting {
         self.account.save<@Administrator>(<-create Administrator(), to: self.adminStoragePath)
 
         // Create a public capability to Voting.Ballot
-        //
         self.account.link<&Voting.Ballot>(self.ballotPublicPath, target: self.ballotStoragePath)
     }
 }

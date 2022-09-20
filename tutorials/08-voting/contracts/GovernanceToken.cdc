@@ -185,6 +185,3 @@ pub contract GovernanceToken: FungibleToken {
         emit TokensInitialized(initialSupply: self.totalSupply)
     }
 }
-
-
-

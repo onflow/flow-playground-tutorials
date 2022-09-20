@@ -20,8 +20,8 @@ import GovernanceToken from "./GovernanceToken.cdc"
 
 pub contract Voting {
 
-    // list of proposals to be approved
-    pub var proposals: [ProposalData]
+    // dictionary of proposals to be approved
+    pub var proposals: {UInt16 : ProposalData}
 
     // paths
     pub let adminStoragePath: StoragePath
@@ -50,12 +50,12 @@ pub contract Voting {
         pub vaultId: UInt64
         pub votingWeightDataSnapshot: [GovernanceToken.VotingWeightData]
 
-        pub fun vote(proposalId: Int){
+        pub fun vote(proposalId: UInt16){
             pre {
                 Voting.proposals[proposalId] != nil: "Cannot vote for a proposal that doesn't exist"
-                Voting.proposals[proposalId].voters[self.vaultId] == nil: "Cannot cast vote again using same Governance Token Vault"
+                Voting.proposals[proposalId]!.voters[self.vaultId] == nil: "Cannot cast vote again using same Governance Token Vault"
                 self.votingWeightDataSnapshot != nil && self.votingWeightDataSnapshot.length > 0: "Can only vote if balance exists"
-                self.votingWeightDataSnapshot[0].blockTs < Voting.proposals[proposalId].blockTs: "Can only vote if balance was recorded before proposal was created"
+                self.votingWeightDataSnapshot[0].blockTs < Voting.proposals[proposalId]!.blockTs: "Can only vote if balance was recorded before proposal was created"
             }
         }
     }
@@ -78,19 +78,21 @@ pub contract Voting {
         }
 
         // Tallies the vote to indicate which proposal the vote is for
-        pub fun vote(proposalId: Int) {
+        pub fun vote(proposalId: UInt16) {
             var votingWeight: GovernanceToken.VotingWeightData = self.votingWeightDataSnapshot[0]
 
             for votingWeightData in self.votingWeightDataSnapshot {
-                if votingWeightData.blockTs <= Voting.proposals[proposalId].blockTs {
+                if votingWeightData.blockTs <= Voting.proposals[proposalId]!.blockTs {
                     votingWeight = votingWeightData
                 } else {
                     break
                 }
             }
 
-            Voting.proposals[proposalId].votes = Voting.proposals[proposalId].votes + votingWeight.vaultBalance
-            Voting.proposals[proposalId].voters[self.vaultId] = true
+            let proposalData = Voting.proposals[proposalId]!
+            proposalData.votes = proposalData.votes + votingWeight.vaultBalance
+            proposalData.voters[self.vaultId] = true
+            Voting.proposals.insert(key: proposalId, proposalData)
         }
     }
 
@@ -99,7 +101,7 @@ pub contract Voting {
     pub resource Administrator {
 
         // function to initialize all the proposals for the voting
-        pub fun initializeProposals(_ proposals: [ProposalData]) {
+        pub fun initializeProposals(_ proposals: {UInt16 : ProposalData}) {
             pre {
                 Voting.proposals.length == 0: "Proposals can only be initialized once"
                 proposals.length > 0: "Cannot initialize with no proposals"
@@ -117,7 +119,7 @@ pub contract Voting {
     // initializes the contract by setting the proposals and votes to empty
     // and creating a new Admin resource to put in storage
     init() {
-        self.proposals = []
+        self.proposals = {}
 
         self.ballotStoragePath = /storage/CadenceVotingTutorialBallotStoragePath
         self.adminStoragePath = /storage/CadenceVotingTutorialAdminStoragePath

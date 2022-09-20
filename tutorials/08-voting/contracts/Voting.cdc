@@ -21,7 +21,7 @@ import GovernanceToken from "./GovernanceToken.cdc"
 pub contract Voting {
 
     // dictionary of proposals to be approved
-    pub var proposals: {UInt16 : ProposalData}
+    pub var proposals: {Int : ProposalData}
 
     // paths
     pub let adminStoragePath: StoragePath
@@ -31,17 +31,23 @@ pub contract Voting {
     pub struct ProposalData {
         // the name of the proposal
         pub let name: String
+        // possible options
+        pub let options: [String]
         // when the proposal was created
         pub let blockTs: UFix64
-        // the total votes, as represented by the accumulated balances of voters
-        pub(set) var votes: UFix64
+        // the total votes per option, as represented by the accumulated balances of voters
+        pub(set) var votes: {Int : UFix64}
         // used to record if a voter as represented by the vault id has already voted
         pub(set) var voters: {UInt64: Bool}
 
-        init(name: String, blockTs: UFix64) {
+        init(name: String, options: [String], blockTs: UFix64) {
             self.name = name
+            self.options = options
             self.blockTs = blockTs
-            self.votes = 0.0
+            self.votes = {}
+            for index, option in options {
+                self.votes[index] = 0.0
+            }
             self.voters = {}
         }
     }
@@ -50,10 +56,11 @@ pub contract Voting {
         pub vaultId: UInt64
         pub votingWeightDataSnapshot: [GovernanceToken.VotingWeightData]
 
-        pub fun vote(proposalId: UInt16){
+        pub fun vote(proposalId: Int, optionId: Int){
             pre {
                 Voting.proposals[proposalId] != nil: "Cannot vote for a proposal that doesn't exist"
                 Voting.proposals[proposalId]!.voters[self.vaultId] == nil: "Cannot cast vote again using same Governance Token Vault"
+                optionId < Voting.proposals[proposalId]!.options.length: "This option does not exist"
                 self.votingWeightDataSnapshot != nil && self.votingWeightDataSnapshot.length > 0: "Can only vote if balance exists"
                 self.votingWeightDataSnapshot[0].blockTs < Voting.proposals[proposalId]!.blockTs: "Can only vote if balance was recorded before proposal was created"
             }
@@ -78,7 +85,7 @@ pub contract Voting {
         }
 
         // Tallies the vote to indicate which proposal the vote is for
-        pub fun vote(proposalId: UInt16) {
+        pub fun vote(proposalId: Int, optionId: Int) {
             var votingWeight: GovernanceToken.VotingWeightData = self.votingWeightDataSnapshot[0]
 
             for votingWeightData in self.votingWeightDataSnapshot {
@@ -90,7 +97,7 @@ pub contract Voting {
             }
 
             let proposalData = Voting.proposals[proposalId]!
-            proposalData.votes = proposalData.votes + votingWeight.vaultBalance
+            proposalData.votes[optionId] = proposalData.votes[optionId]! + votingWeight.vaultBalance
             proposalData.voters[self.vaultId] = true
             Voting.proposals.insert(key: proposalId, proposalData)
         }
@@ -101,7 +108,7 @@ pub contract Voting {
     pub resource Administrator {
 
         // function to initialize all the proposals for the voting
-        pub fun initializeProposals(_ proposals: {UInt16 : ProposalData}) {
+        pub fun initializeProposals(_ proposals: {Int : ProposalData}) {
             pre {
                 Voting.proposals.length == 0: "Proposals can only be initialized once"
                 proposals.length > 0: "Cannot initialize with no proposals"

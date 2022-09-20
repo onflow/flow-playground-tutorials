@@ -11,9 +11,11 @@ transaction {
         let adminRef = admin.borrow<&Voting.Administrator>(from: Voting.adminStoragePath)!
 
         let ts = getCurrentBlock().timestamp
-        let proposal1 = Voting.ProposalData(name: "Sesame seeds are better than poppy seeds", blockTs: ts)
-        let proposal2 = Voting.ProposalData(name: "Trampolines instead of hardwood floors", blockTs: ts)
-        let proposals = {0 as UInt16 : proposal1, 1 as UInt16 : proposal2}
+        let food = ["Pizza", "Spaghetti", "Pancake"]
+        let proposal1 = Voting.ProposalData(name: "What's up for dinner?", options: food, blockTs: ts)
+        let oneChoice = ["Yes", "No"]
+        let proposal2 = Voting.ProposalData(name: "Let's throw a party!", options: oneChoice, blockTs: ts)
+        let proposals = {0 : proposal1, 1 : proposal2}
 
         // Call the initializeProposals function
         // to create the proposals array as an array of ProposolData

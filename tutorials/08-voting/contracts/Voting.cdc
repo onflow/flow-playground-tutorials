@@ -29,9 +29,13 @@ pub contract Voting {
     pub let ballotPublicPath: PublicPath
 
     pub struct ProposalData {
+        // the name of the proposal
         pub let name: String
+        // when the proposal was created
         pub let blockTs: UFix64
+        // the total votes, as represented by the accumulated balances of voters
         pub(set) var votes: UFix64
+        // used to record if a voter as represented by the vault id has already voted
         pub(set) var voters: {UInt64: Bool}
 
         init(name: String, blockTs: UFix64) {

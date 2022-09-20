@@ -124,13 +124,13 @@ pub contract GovernanceToken: FungibleToken {
         return <-create Vault(balance: 0.0)
     }
 
-	// VaultMinter
+    // VaultMinter
     //
     // Resource object that an admin can control to mint new tokens
     pub resource VaultMinter {
 
-		// Function that mints new tokens and deposits into an account's vault
-		// using their `Receiver` reference.
+        // Function that mints new tokens and deposits into an account's vault
+        // using their `Receiver` reference.
         // We say `&AnyResource{Receiver}` to say that the recipient can be any resource
         // as long as it implements the Receiver interface
         pub fun mintTokens(amount: UFix64, recipient: Capability<&AnyResource{FungibleToken.Receiver}>) {

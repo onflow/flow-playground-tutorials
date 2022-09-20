@@ -108,12 +108,16 @@ pub contract VotingTutorialAdministration {
     pub resource Administrator {
 
         // function to initialize all the proposals for the voting
-        pub fun initializeProposals(_ proposals: {Int : ProposalData}) {
+        pub fun addProposals(_ proposals: {Int : ProposalData}) {
             pre {
-                VotingTutorialAdministration.proposals.length == 0: "Proposals can only be initialized once"
-                proposals.length > 0: "Cannot initialize with no proposals"
+                proposals.length > 0: "Cannot add empty proposals data"
             }
-            VotingTutorialAdministration.proposals = proposals
+            for key in proposals.keys {
+                if (VotingTutorialAdministration.proposals[key] != nil) {
+                    panic("Proposal with this key already exists")
+                }
+                VotingTutorialAdministration.proposals[key] = proposals[key]
+            }
         }
 
     }

@@ -19,9 +19,9 @@ transaction {
 
         // Call the initializeProposals function
         // to create the proposals array as an array of ProposolData
-        adminRef.initializeProposals(proposals)
+        adminRef.addProposals(proposals)
 
-        log("Proposals Initialized!")
+        log("Proposals added!")
     }
 
     post {

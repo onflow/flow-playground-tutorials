@@ -10,10 +10,14 @@ transaction {
         // borrow a reference to the admin Resource
         let adminRef = admin.borrow<&Voting.Administrator>(from: Voting.adminStoragePath)!
 
+        let ts = getCurrentBlock().timestamp
+        let proposal1 = Voting.ProposalData(name: "Sesame seeds are better than poppy seeds", blockTs: ts)
+        let proposal2 = Voting.ProposalData(name: "Trampolines instead of hardwood floors", blockTs: ts)
+
         // Call the initializeProposals function
         // to create the proposals array as an array of ProposolData
         adminRef.initializeProposals(
-            proposals: ["Sesame seeds are better than poppy seeds", "Trampolines instead of hardwood floors"]
+            [proposal1, proposal2]
         )
 
         log("Proposals Initialized!")

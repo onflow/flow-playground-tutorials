@@ -5,11 +5,6 @@ import FungibleToken from "./FungibleToken.cdc"
 // The GovernanceToken contract is a sample implementation of a fungible token on Flow which can be used for voting.
 
 pub contract GovernanceToken: FungibleToken {
-    // checkpointCounter is incremented with each proposal. 
-    // For voting, only the user's balance before 
-    // the respective proposal checkpoint value will be taken into account.
-    // TODO: this should not be public
-    pub(set) var checkpointCounter: UInt16
 
     // Total supply of all tokens in existence.
     pub var totalSupply: UFix64
@@ -38,11 +33,11 @@ pub contract GovernanceToken: FungibleToken {
     //
     pub struct VotingWeightData {
         pub let vaultBalance: UFix64
-        pub let checkpoint: UInt16
+        pub let blockTs: UFix64
 
-        init(vaultBalance: UFix64) {
+        init(vaultBalance: UFix64, blockTs: UFix64) {
             self.vaultBalance = vaultBalance
-            self.checkpoint = GovernanceToken.checkpointCounter
+            self.blockTs = blockTs
         }
     }
 
@@ -112,12 +107,8 @@ pub contract GovernanceToken: FungibleToken {
         //
         // private function to record voting weight of vault
         priv fun recordVotingWeight() {
-            let lastIndex = self.votingWeightDataSnapshot.length - 1
-            if (lastIndex < 0 || self.votingWeightDataSnapshot[lastIndex].checkpoint < GovernanceToken.checkpointCounter) {
-                self.votingWeightDataSnapshot.append(VotingWeightData(vaultBalance: self.balance))
-            } else {
-                self.votingWeightDataSnapshot[lastIndex] = VotingWeightData(vaultBalance: self.balance)
-            }
+            let ts = getCurrentBlock().timestamp
+            self.votingWeightDataSnapshot.append(VotingWeightData(vaultBalance: self.balance, blockTs: ts))
         }
 
     }
@@ -159,7 +150,6 @@ pub contract GovernanceToken: FungibleToken {
     init() {
         self.totalSupply = 0.0
 
-        self.checkpointCounter = 0
         // assign paths
         self.VaultStoragePath = /storage/GovernanceTokenVaultStoragePath
         self.MinterStoragePath = /storage/GovernanceTokenMinterStoragePath

@@ -136,7 +136,7 @@ pub contract BestPizzaPlace {
     }
 
     init() {
-        self.PizzaStoragePath = /storage/pizza
-        self.PizzaPublicPath = /public/pizza
+        self.PizzaStoragePath = /storage/CadenceResourceComposeTutorialPizzaStoragePath
+        self.PizzaPublicPath = /public/CadenceResourceComposeTutorialPizzaPublicPath
     }
 }

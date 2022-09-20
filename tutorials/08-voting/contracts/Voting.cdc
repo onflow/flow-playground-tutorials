@@ -119,9 +119,9 @@ pub contract Voting {
     init() {
         self.proposals = []
 
-        self.ballotStoragePath = /storage/Ballot
-        self.adminStoragePath = /storage/VotingAdmin
-        self.ballotPublicPath = /public/Ballot
+        self.ballotStoragePath = /storage/CadenceVotingTutorialBallotStoragePath
+        self.adminStoragePath = /storage/CadenceVotingTutorialAdminStoragePath
+        self.ballotPublicPath = /public/CadenceVotingTutorialBallotPublicPath
 
         self.account.save<@Administrator>(<-create Administrator(), to: self.adminStoragePath)
 

@@ -151,11 +151,11 @@ pub contract GovernanceToken: FungibleToken {
         self.totalSupply = 0.0
 
         // assign paths
-        self.VaultStoragePath = /storage/GovernanceTokenVaultStoragePath
-        self.MinterStoragePath = /storage/GovernanceTokenMinterStoragePath
-        self.VaultPublicPath = /public/GovernanceTokenVaultPublicPath
-        self.VaultVotingWeightPublicPath = /public/GovernanceTokenVaultVotingWeightPublicPath
-        self.MinterPrivatePath = /private/GovernanceTokenMinterPrivatePath
+        self.VaultStoragePath = /storage/CadenceVotingTutorialGovernanceTokenVaultStoragePath
+        self.MinterStoragePath = /storage/CadenceVotingTutorialGovernanceTokenMinterStoragePath
+        self.VaultPublicPath = /public/CadenceVotingTutorialGovernanceTokenVaultPublicPath
+        self.VaultVotingWeightPublicPath = /public/CadenceVotingTutorialGovernanceTokenVaultVotingWeightPublicPath
+        self.MinterPrivatePath = /private/CadenceVotingTutorialGovernanceTokenMinterPrivatePath
 
         // create the Vault with the initial balance and put it in storage
         // account.save saves an object to the specified `to` path

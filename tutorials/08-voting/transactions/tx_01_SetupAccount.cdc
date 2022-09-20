@@ -1,7 +1,7 @@
 // Setup Account
 
 import FungibleToken from 0xf8d6e0586b0a20c7
-import GovernanceToken from 0xf8d6e0586b0a20c7
+import VotingTutorialGovernanceToken from 0xf8d6e0586b0a20c7
 
 // This transaction configures an account to store and receive tokens defined by
 // the ExampleToken contract.
@@ -11,24 +11,24 @@ transaction {
 	prepare(acct: AuthAccount) {
 
 		// Create a new empty Vault object
-		let vault <- GovernanceToken.createEmptyVault()
+		let vault <- VotingTutorialGovernanceToken.createEmptyVault()
 
     // Store the vault in the account storage
-		acct.save<@FungibleToken.Vault>(<-vault, to: GovernanceToken.VaultStoragePath)
+		acct.save<@FungibleToken.Vault>(<-vault, to: VotingTutorialGovernanceToken.VaultStoragePath)
 
     log("Empty Vault stored")
 
     // Link capability reference
-		acct.link<&GovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, GovernanceToken.VotingWeight}>(GovernanceToken.VaultPublicPath, target: GovernanceToken.VaultStoragePath)
+		acct.link<&VotingTutorialGovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, VotingTutorialGovernanceToken.VotingWeight}>(VotingTutorialGovernanceToken.VaultPublicPath, target: VotingTutorialGovernanceToken.VaultStoragePath)
 
     self.account = acct
-    log("GovernanceToken Receiver reference created")
+    log("VotingTutorialGovernanceToken Receiver reference created")
 	}
 
    post {
         // Check that the capabilities were created correctly
-       getAccount(self.account.address).getCapability<&GovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, GovernanceToken.VotingWeight}>(GovernanceToken.VaultPublicPath)
+       getAccount(self.account.address).getCapability<&VotingTutorialGovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, VotingTutorialGovernanceToken.VotingWeight}>(VotingTutorialGovernanceToken.VaultPublicPath)
        .check():
-         "GovernanceToken Receiver Reference was not created correctly"
+         "VotingTutorialGovernanceToken Receiver Reference was not created correctly"
     }
 }

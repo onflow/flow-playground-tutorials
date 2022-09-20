@@ -1,12 +1,12 @@
 // Mint Tokens
 import FungibleToken from 0xf8d6e0586b0a20c7
-import GovernanceToken from 0xf8d6e0586b0a20c7
+import VotingTutorialGovernanceToken from 0xf8d6e0586b0a20c7
 
 // This transaction mints tokens and deposits them into the receiver account's vault
 transaction (recipient1: Address, recipient2: Address, amountRecipient1: UFix64, amountRecipient2: UFix64) {
 
     // Local variable for storing the reference to the minter resource
-    let mintingRef: &GovernanceToken.VaultMinter
+    let mintingRef: &VotingTutorialGovernanceToken.VaultMinter
 
     // Local variable for storing the reference to the Vault of
     // the account that will receive the newly minted tokens
@@ -15,7 +15,7 @@ transaction (recipient1: Address, recipient2: Address, amountRecipient1: UFix64,
 
     prepare(acct: AuthAccount) {
         // Borrow a reference to the stored, private minter resource
-        self.mintingRef = acct.borrow<&GovernanceToken.VaultMinter>(from: GovernanceToken.MinterStoragePath)
+        self.mintingRef = acct.borrow<&VotingTutorialGovernanceToken.VaultMinter>(from: VotingTutorialGovernanceToken.MinterStoragePath)
             ?? panic("Could not borrow a reference to the minter")
 
         // Get the public account objects
@@ -23,8 +23,8 @@ transaction (recipient1: Address, recipient2: Address, amountRecipient1: UFix64,
         let recipient2Account = getAccount(recipient2)
 
         // Get their public receiver capabilities
-        self.receiver1 = recipient1Account.getCapability<&AnyResource{FungibleToken.Receiver}>(GovernanceToken.VaultPublicPath)
-        self.receiver2 = recipient2Account.getCapability<&AnyResource{FungibleToken.Receiver}>(GovernanceToken.VaultPublicPath)
+        self.receiver1 = recipient1Account.getCapability<&AnyResource{FungibleToken.Receiver}>(VotingTutorialGovernanceToken.VaultPublicPath)
+        self.receiver2 = recipient2Account.getCapability<&AnyResource{FungibleToken.Receiver}>(VotingTutorialGovernanceToken.VaultPublicPath)
     }
 
     execute {

@@ -1,12 +1,11 @@
 // SelectAndCastVotes
 
-import Voting from 0xf8d6e0586b0a20c7
-import GovernanceToken from 0xf8d6e0586b0a20c7
+import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
 
 // This transaction allows a voter to select a proposal via its id and vote for it
 transaction (proposalId: Int, optionId: Int) {
     prepare(voter: AuthAccount) {
-        let ballot <- voter.load<@Voting.Ballot>(from: Voting.ballotStoragePath)
+        let ballot <- voter.load<@VotingTutorialAdministration.Ballot>(from: VotingTutorialAdministration.ballotStoragePath)
             ?? panic("Could not load the voter's ballot")
 
         // Vote on the proposal

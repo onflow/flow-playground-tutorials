@@ -1,5 +1,5 @@
 import FungibleToken from 0xf8d6e0586b0a20c7
-import GovernanceToken from 0xf8d6e0586b0a20c7
+import VotingTutorialGovernanceToken from 0xf8d6e0586b0a20c7
 
 pub fun main(account1: Address, account2: Address): [{String: AnyStruct}] {
   let acct1 = getAccount(account1)
@@ -8,20 +8,20 @@ pub fun main(account1: Address, account2: Address): [{String: AnyStruct}] {
     // Get references to the account's receivers
     // by getting their public capability
     // and borrowing a reference from the capability
-    let acct1BalanceRef = acct1.getCapability(GovernanceToken.VaultPublicPath)
+    let acct1BalanceRef = acct1.getCapability(VotingTutorialGovernanceToken.VaultPublicPath)
                             .borrow<&AnyResource{FungibleToken.Balance}>()
                             ?? panic("Could not borrow a reference to the acct1 balance")
 
-    let acct2BalanceRef = acct2.getCapability(GovernanceToken.VaultPublicPath)
+    let acct2BalanceRef = acct2.getCapability(VotingTutorialGovernanceToken.VaultPublicPath)
                             .borrow<&AnyResource{FungibleToken.Balance}>()
                             ?? panic("Could not borrow a reference to the acct2 balance")
 
-    let acct1VoteWeightRef = acct1.getCapability(GovernanceToken.VaultPublicPath)
-                            .borrow<&AnyResource{GovernanceToken.VotingWeight}>()
+    let acct1VoteWeightRef = acct1.getCapability(VotingTutorialGovernanceToken.VaultPublicPath)
+                            .borrow<&AnyResource{VotingTutorialGovernanceToken.VotingWeight}>()
                             ?? panic("Could not borrow a reference to the acct1 voting weight")
 
-    let acct2VoteWeightRef = acct2.getCapability(GovernanceToken.VaultPublicPath)
-                            .borrow<&AnyResource{GovernanceToken.VotingWeight}>()
+    let acct2VoteWeightRef = acct2.getCapability(VotingTutorialGovernanceToken.VaultPublicPath)
+                            .borrow<&AnyResource{VotingTutorialGovernanceToken.VotingWeight}>()
                             ?? panic("Could not borrow a reference to the acct2 voting weight")
 
 
@@ -31,7 +31,7 @@ pub fun main(account1: Address, account2: Address): [{String: AnyStruct}] {
     log(acct2BalanceRef.balance)
 
     log("total supply")
-    log(GovernanceToken.totalSupply)
+    log(VotingTutorialGovernanceToken.totalSupply)
 
     let acct1Weight = acct1VoteWeightRef.votingWeightDataSnapshot
     let acct1WeightLastItem = acct1Weight.length > 0 ? acct1Weight[acct1Weight.length - 1] : nil
@@ -50,7 +50,7 @@ pub fun main(account1: Address, account2: Address): [{String: AnyStruct}] {
     return [
       {"acct1BalanceRefBalance": acct1BalanceRef.balance},
       {"acct2BalanceRefBalance": acct2BalanceRef.balance},
-      {"GovernanceTokenTotalSupply": GovernanceToken.totalSupply},
+      {"GovernanceTokenTotalSupply": VotingTutorialGovernanceToken.totalSupply},
       {"acct1WeightLastItem?.vaultBalance": acct1WeightLastItem?.vaultBalance},
       {"acct1WeightLastItem?.blockTs": acct1WeightLastItem?.blockTs},
       {"acct2WeightLastItem?.vaultBalance": acct2WeightLastItem?.vaultBalance},

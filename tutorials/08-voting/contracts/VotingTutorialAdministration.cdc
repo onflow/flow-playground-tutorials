@@ -7,7 +7,7 @@
 *   then initializes the proposals.
 *   The array of proposals cannot be modified after it has been initialized.
 *
-*   Users can create ballots and vote only with their GovernanceToken balance prior to when
+*   Users can create ballots and vote only with their VotingTutorialGovernanceToken balance prior to when
 *   proposal was created.
 *
 *   Every user with a ballot is allowed to approve their chosen proposals.
@@ -16,9 +16,9 @@
 *
 */
 
-import GovernanceToken from "./GovernanceToken.cdc"
+import VotingTutorialGovernanceToken from "./VotingTutorialGovernanceToken.cdc"
 
-pub contract Voting {
+pub contract VotingTutorialAdministration {
 
     // dictionary of proposals to be approved
     pub var proposals: {Int : ProposalData}
@@ -54,15 +54,15 @@ pub contract Voting {
 
     pub resource interface Votable {
         pub vaultId: UInt64
-        pub votingWeightDataSnapshot: [GovernanceToken.VotingWeightData]
+        pub votingWeightDataSnapshot: [VotingTutorialGovernanceToken.VotingWeightData]
 
         pub fun vote(proposalId: Int, optionId: Int){
             pre {
-                Voting.proposals[proposalId] != nil: "Cannot vote for a proposal that doesn't exist"
-                Voting.proposals[proposalId]!.voters[self.vaultId] == nil: "Cannot cast vote again using same Governance Token Vault"
-                optionId < Voting.proposals[proposalId]!.options.length: "This option does not exist"
+                VotingTutorialAdministration.proposals[proposalId] != nil: "Cannot vote for a proposal that doesn't exist"
+                VotingTutorialAdministration.proposals[proposalId]!.voters[self.vaultId] == nil: "Cannot cast vote again using same Governance Token Vault"
+                optionId < VotingTutorialAdministration.proposals[proposalId]!.options.length: "This option does not exist"
                 self.votingWeightDataSnapshot != nil && self.votingWeightDataSnapshot.length > 0: "Can only vote if balance exists"
-                self.votingWeightDataSnapshot[0].blockTs < Voting.proposals[proposalId]!.blockTs: "Can only vote if balance was recorded before proposal was created"
+                self.votingWeightDataSnapshot[0].blockTs < VotingTutorialAdministration.proposals[proposalId]!.blockTs: "Can only vote if balance was recorded before proposal was created"
             }
         }
     }
@@ -71,13 +71,13 @@ pub contract Voting {
     // When a user gets a Ballot resource, they call the `vote` function
     // to include their votes
     pub resource Ballot: Votable {
-        // id of GovernanceToken Vault
+        // id of VotingTutorialGovernanceToken Vault
         pub let vaultId: UInt64
-        // array of GovernanceToken Vault's votingWeightDataSnapshot
-        pub let votingWeightDataSnapshot: [GovernanceToken.VotingWeightData]
+        // array of VotingTutorialGovernanceToken Vault's votingWeightDataSnapshot
+        pub let votingWeightDataSnapshot: [VotingTutorialGovernanceToken.VotingWeightData]
 
 
-        init(recipientCap: Capability<&GovernanceToken.Vault{GovernanceToken.VotingWeight}>) {
+        init(recipientCap: Capability<&VotingTutorialGovernanceToken.Vault{VotingTutorialGovernanceToken.VotingWeight}>) {
             let recipientRef = recipientCap.borrow() ?? panic("Could not borrow VotingWeight reference from the Capability")
 
             self.vaultId = recipientRef.vaultId
@@ -86,20 +86,20 @@ pub contract Voting {
 
         // Tallies the vote to indicate which proposal the vote is for
         pub fun vote(proposalId: Int, optionId: Int) {
-            var votingWeight: GovernanceToken.VotingWeightData = self.votingWeightDataSnapshot[0]
+            var votingWeight: VotingTutorialGovernanceToken.VotingWeightData = self.votingWeightDataSnapshot[0]
 
             for votingWeightData in self.votingWeightDataSnapshot {
-                if votingWeightData.blockTs <= Voting.proposals[proposalId]!.blockTs {
+                if votingWeightData.blockTs <= VotingTutorialAdministration.proposals[proposalId]!.blockTs {
                     votingWeight = votingWeightData
                 } else {
                     break
                 }
             }
 
-            let proposalData = Voting.proposals[proposalId]!
+            let proposalData = VotingTutorialAdministration.proposals[proposalId]!
             proposalData.votes[optionId] = proposalData.votes[optionId]! + votingWeight.vaultBalance
             proposalData.voters[self.vaultId] = true
-            Voting.proposals.insert(key: proposalId, proposalData)
+            VotingTutorialAdministration.proposals.insert(key: proposalId, proposalData)
         }
     }
 
@@ -110,16 +110,16 @@ pub contract Voting {
         // function to initialize all the proposals for the voting
         pub fun initializeProposals(_ proposals: {Int : ProposalData}) {
             pre {
-                Voting.proposals.length == 0: "Proposals can only be initialized once"
+                VotingTutorialAdministration.proposals.length == 0: "Proposals can only be initialized once"
                 proposals.length > 0: "Cannot initialize with no proposals"
             }
-            Voting.proposals = proposals
+            VotingTutorialAdministration.proposals = proposals
         }
 
     }
 
     // Creates a new Ballot
-    pub fun issueBallot(recipientCap: Capability<&GovernanceToken.Vault{GovernanceToken.VotingWeight}>): @Ballot {
+    pub fun issueBallot(recipientCap: Capability<&VotingTutorialGovernanceToken.Vault{VotingTutorialGovernanceToken.VotingWeight}>): @Ballot {
         return <-create Ballot(recipientCap: recipientCap)
     }
 
@@ -134,8 +134,8 @@ pub contract Voting {
 
         self.account.save<@Administrator>(<-create Administrator(), to: self.adminStoragePath)
 
-        // Create a public capability to Voting.Ballot
+        // Create a public capability to VotingTutorialAdministration.Ballot
         //
-        self.account.link<&Voting.Ballot>(self.ballotPublicPath, target: self.ballotStoragePath)
+        self.account.link<&VotingTutorialAdministration.Ballot>(self.ballotPublicPath, target: self.ballotStoragePath)
     }
 }

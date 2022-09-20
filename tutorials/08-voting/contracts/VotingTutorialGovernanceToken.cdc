@@ -1,10 +1,10 @@
 import FungibleToken from "./FungibleToken.cdc"
 
-// GovernanceToken.cdc
+// VotingTutorialGovernanceToken.cdc
 //
-// The GovernanceToken contract is a sample implementation of a fungible token on Flow which can be used for voting.
+// The VotingTutorialGovernanceToken contract is a sample implementation of a fungible token on Flow which can be used for voting.
 
-pub contract GovernanceToken: FungibleToken {
+pub contract VotingTutorialGovernanceToken: FungibleToken {
 
     // Total supply of all tokens in existence.
     pub var totalSupply: UFix64
@@ -96,7 +96,7 @@ pub contract GovernanceToken: FungibleToken {
         // was a temporary holder of the tokens. The Vault's balance has
         // been consumed and therefore can be destroyed.
         pub fun deposit(from: @FungibleToken.Vault) {
-            let vault <- from as! @GovernanceToken.Vault
+            let vault <- from as! @VotingTutorialGovernanceToken.Vault
             self.balance = self.balance + vault.balance
             emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
             self.recordVotingWeight()
@@ -137,7 +137,7 @@ pub contract GovernanceToken: FungibleToken {
             let recipientRef = recipient.borrow()
                 ?? panic("Could not borrow a receiver reference to the vault")
 
-            GovernanceToken.totalSupply = GovernanceToken.totalSupply + UFix64(amount)
+            VotingTutorialGovernanceToken.totalSupply = VotingTutorialGovernanceToken.totalSupply + UFix64(amount)
             recipientRef.deposit(from: <-create Vault(balance: amount))
 
             emit TokensMinted(amount: amount)
@@ -151,11 +151,11 @@ pub contract GovernanceToken: FungibleToken {
         self.totalSupply = 0.0
 
         // assign paths
-        self.VaultStoragePath = /storage/CadenceVotingTutorialGovernanceTokenVaultStoragePath
-        self.MinterStoragePath = /storage/CadenceVotingTutorialGovernanceTokenMinterStoragePath
-        self.VaultPublicPath = /public/CadenceVotingTutorialGovernanceTokenVaultPublicPath
-        self.VaultVotingWeightPublicPath = /public/CadenceVotingTutorialGovernanceTokenVaultVotingWeightPublicPath
-        self.MinterPrivatePath = /private/CadenceVotingTutorialGovernanceTokenMinterPrivatePath
+        self.VaultStoragePath = /storage/CadenceVotingTutorialVotingTutorialGovernanceTokenVaultStoragePath
+        self.MinterStoragePath = /storage/CadenceVotingTutorialVotingTutorialGovernanceTokenMinterStoragePath
+        self.VaultPublicPath = /public/CadenceVotingTutorialVotingTutorialGovernanceTokenVaultPublicPath
+        self.VaultVotingWeightPublicPath = /public/CadenceVotingTutorialVotingTutorialGovernanceTokenVaultVotingWeightPublicPath
+        self.MinterPrivatePath = /private/CadenceVotingTutorialVotingTutorialGovernanceTokenMinterPrivatePath
 
         // create the Vault with the initial balance and put it in storage
         // account.save saves an object to the specified `to` path
@@ -167,7 +167,7 @@ pub contract GovernanceToken: FungibleToken {
 
         // Create a public capability to the stored Vault that exposes VotingWeight
         //
-        self.account.link<&GovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, GovernanceToken.VotingWeight}>(GovernanceToken.VaultPublicPath, target: GovernanceToken.VaultStoragePath)
+        self.account.link<&VotingTutorialGovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, VotingTutorialGovernanceToken.VotingWeight}>(VotingTutorialGovernanceToken.VaultPublicPath, target: VotingTutorialGovernanceToken.VaultStoragePath)
 
         // Create a new MintAndBurn resource and store it in account storage
         self.account.save(<-create VaultMinter(), to: self.MinterStoragePath)

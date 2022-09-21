@@ -13,8 +13,6 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
     pub let VaultStoragePath: StoragePath
     pub let MinterStoragePath: StoragePath
     pub let VaultPublicPath: PublicPath
-    pub let VaultVotingWeightPublicPath: PublicPath
-    pub let MinterPrivatePath: PrivatePath
 
     // Event that is emitted when the contract is created
     pub event TokensInitialized(initialSupply: UFix64)
@@ -154,8 +152,6 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
         self.VaultStoragePath = /storage/CadenceVotingTutorialVotingTutorialGovernanceTokenVaultStoragePath
         self.MinterStoragePath = /storage/CadenceVotingTutorialVotingTutorialGovernanceTokenMinterStoragePath
         self.VaultPublicPath = /public/CadenceVotingTutorialVotingTutorialGovernanceTokenVaultPublicPath
-        self.VaultVotingWeightPublicPath = /public/CadenceVotingTutorialVotingTutorialGovernanceTokenVaultVotingWeightPublicPath
-        self.MinterPrivatePath = /private/CadenceVotingTutorialVotingTutorialGovernanceTokenMinterPrivatePath
 
         // create the Vault with the initial balance and put it in storage
         // account.save saves an object to the specified `to` path
@@ -171,15 +167,6 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
 
         // Create a new MintAndBurn resource and store it in account storage
         self.account.save(<-create VaultMinter(), to: self.MinterStoragePath)
-
-        // Create a private capability link for the Minter
-        // Capabilities can be used to create temporary references to an object
-        // so that callers can use the reference to access fields and functions
-        // of the objet.
-        //
-        // The capability is stored in the /private/ domain, which is only
-        // accesible by the owner of the account
-        self.account.link<&VaultMinter>(self.MinterPrivatePath, target: self.MinterStoragePath)
 
         // Emit initialization event
         emit TokensInitialized(initialSupply: self.totalSupply)

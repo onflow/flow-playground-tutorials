@@ -26,7 +26,6 @@ pub contract VotingTutorialAdministration {
     // paths
     pub let adminStoragePath: StoragePath
     pub let ballotStoragePath: StoragePath
-    pub let ballotPublicPath: PublicPath
 
     pub struct ProposalData {
         // the name of the proposal
@@ -134,12 +133,7 @@ pub contract VotingTutorialAdministration {
 
         self.ballotStoragePath = /storage/CadenceVotingTutorialBallotStoragePath
         self.adminStoragePath = /storage/CadenceVotingTutorialAdminStoragePath
-        self.ballotPublicPath = /public/CadenceVotingTutorialBallotPublicPath
 
         self.account.save<@Administrator>(<-create Administrator(), to: self.adminStoragePath)
-
-        // Create a public capability to VotingTutorialAdministration.Ballot
-        //
-        self.account.link<&VotingTutorialAdministration.Ballot>(self.ballotPublicPath, target: self.ballotStoragePath)
     }
 }

@@ -1,5 +1,4 @@
 /*
-*
 *   In this example, we want to create a simple voting contract
 *   where a polling place issues ballots to addresses.
 *
@@ -18,23 +17,25 @@ import VotingTutorialGovernanceToken from "./VotingTutorialGovernanceToken.cdc"
 
 pub contract VotingTutorialAdministration {
 
-    // dictionary of proposals to be approved
+    /// Dictionary of proposals to be approved
     pub var proposals: {Int : ProposalData}
 
-    // paths
+    /// Paths
     pub let adminStoragePath: StoragePath
     pub let ballotStoragePath: StoragePath
 
+    /// ProposalData contains all the data concering a proposal,
+    /// including the votes and a voter registry
     pub struct ProposalData {
-        // the name of the proposal
+        /// The name of the proposal
         pub let name: String
-        // possible options
+        /// Possible options
         pub let options: [String]
-        // when the proposal was created
+        /// When the proposal was created
         pub let blockTs: UFix64
-        // the total votes per option, as represented by the accumulated balances of voters
+        /// The total votes per option, as represented by the accumulated balances of voters
         pub(set) var votes: {Int : UFix64}
-        // used to record if a voter as represented by the vault id has already voted
+        /// Used to record if a voter as represented by the vault id has already voted
         pub(set) var voters: {UInt64: Bool}
 
         init(name: String, options: [String], blockTs: UFix64) {
@@ -43,12 +44,17 @@ pub contract VotingTutorialAdministration {
             self.blockTs = blockTs
             self.votes = {}
             for index, option in options {
+                /// Needed because we force unwrap later
                 self.votes[index] = 0.0
             }
             self.voters = {}
         }
     }
 
+    /// Votable
+    ///
+    /// Interface which keeps track of voting weight history and allows to cast a vote
+    ///
     pub resource interface Votable {
         pub vaultId: UInt64
         pub votingWeightDataSnapshot: [VotingTutorialGovernanceToken.VotingWeightData]
@@ -58,22 +64,25 @@ pub contract VotingTutorialAdministration {
                 VotingTutorialAdministration.proposals[proposalId] != nil: "Cannot vote for a proposal that doesn't exist"
                 VotingTutorialAdministration.proposals[proposalId]!.voters[self.vaultId] == nil: "Cannot cast vote again using same Governance Token Vault"
                 optionId < VotingTutorialAdministration.proposals[proposalId]!.options.length: "This option does not exist"
-                self.votingWeightDataSnapshot != nil && self.votingWeightDataSnapshot.length > 0: "Can only vote if balance exists"
+                self.votingWeightDataSnapshot.length > 0: "Can only vote if balance exists"
                 self.votingWeightDataSnapshot[0].blockTs < VotingTutorialAdministration.proposals[proposalId]!.blockTs: "Can only vote if balance was recorded before proposal was created"
             }
         }
     }
 
-    // This is the resource that is issued to users.
-    // When a user gets a Ballot resource, they call the `vote` function
-    // to include their votes
+    /// Ballot
+    ///
+    /// This is the resource that is issued to users.
+    /// When a user gets a Ballot resource, they call the `vote` function
+    /// to include their vote.
+    ///
     pub resource Ballot: Votable {
-        // id of VotingTutorialGovernanceToken Vault
+        /// Id of VotingTutorialGovernanceToken Vault
         pub let vaultId: UInt64
-        // array of VotingTutorialGovernanceToken Vault's votingWeightDataSnapshot
+        /// Array of VotingTutorialGovernanceToken Vault's votingWeightData
         pub let votingWeightDataSnapshot: [VotingTutorialGovernanceToken.VotingWeightData]
 
-
+        /// Borrows the Vault capability in order to set both the vault id and the VotingWeightData history
         init(recipientCap: Capability<&VotingTutorialGovernanceToken.Vault{VotingTutorialGovernanceToken.VotingWeight}>) {
             let recipientRef = recipientCap.borrow() ?? panic("Could not borrow VotingWeight reference from the Capability")
 
@@ -81,7 +90,8 @@ pub contract VotingTutorialAdministration {
             self.votingWeightDataSnapshot = recipientRef.votingWeightDataSnapshot
         }
 
-        // Tallies the vote to indicate which proposal the vote is for
+        /// Adds the last recorded voter balance before proposal creation 
+        /// to the chosen proposal and option
         pub fun vote(proposalId: Int, optionId: Int) {
             var votingWeight: VotingTutorialGovernanceToken.VotingWeightData = self.votingWeightDataSnapshot[0]
 
@@ -100,8 +110,9 @@ pub contract VotingTutorialAdministration {
         }
     }
 
-    // Resource that the Administrator of the vote controls to
-    // initialize the proposals and to pass out ballot resources to voters
+    /// Administrator
+    ///
+    // The Administrator resource allows to add proposals
     pub resource Administrator {
 
         // function to initialize all the proposals for the voting
@@ -119,13 +130,13 @@ pub contract VotingTutorialAdministration {
 
     }
 
-    // Creates a new Ballot
+    /// issueBallot creates a new Ballot
     pub fun issueBallot(recipientCap: Capability<&VotingTutorialGovernanceToken.Vault{VotingTutorialGovernanceToken.VotingWeight}>): @Ballot {
         return <-create Ballot(recipientCap: recipientCap)
     }
 
-    // initializes the contract by setting the proposals and votes to empty
-    // and creating a new Admin resource to put in storage
+    /// Initializes the contract by setting the proposals,
+    /// assigns the paths and creates a new Admin resource and saves it in account storage
     init() {
         self.proposals = {}
 

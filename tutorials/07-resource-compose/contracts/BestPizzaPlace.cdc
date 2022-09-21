@@ -9,10 +9,12 @@ pub contract BestPizzaPlace {
     ///
     /// The pizza will be stored here via a transaction
     pub let PizzaStoragePath: StoragePath
+    /// A capability which will allow to add toppings will be linked under this path
+    pub let PizzaAddToppingPrivatePath: PrivatePath
     /// A capability which will allow to show the order will be linked under this path
-    pub let PizzaPublicPath: PublicPath
+    pub let PizzaShowOrderPublicPath: PublicPath
 
-    ///Ingredient
+    /// Ingredient
     ///
     /// This resource interface simply says that something is an ingredient with a name
     pub resource interface Ingredient {
@@ -99,10 +101,24 @@ pub contract BestPizzaPlace {
         return <-create Dough(name: name, timeToBake: timeToBake)
     }
 
+    /// AddTopping
+    ///
+    /// This resource interface signifies that you can add a topping
+    pub resource interface AddTopping {
+        pub fun addTopping(topping: @Topping)
+    }
+
+    /// ShowOrder
+    ///
+    /// This resource interface signifies that you can show the order
+    pub resource interface ShowOrder {
+        pub fun showOrder(): Order
+    }
+
     /// Pizza
     ///
     /// The Pizza resource has a name and is made of one dough and one sauce, and possibly multiple toppings
-    pub resource Pizza {
+    pub resource Pizza: AddTopping, ShowOrder {
         pub let name: String
         pub let dough: @Dough
         pub let sauce: @Sauce
@@ -173,6 +189,7 @@ pub contract BestPizzaPlace {
     /// init assigns the contract paths
     init() {
         self.PizzaStoragePath = /storage/CadenceResourceComposeTutorialPizzaStoragePath
-        self.PizzaPublicPath = /public/CadenceResourceComposeTutorialPizzaPublicPath
+        self.PizzaAddToppingPrivatePath = /private/CadenceResourceComposeTutorialPizzaPrivatePath
+        self.PizzaShowOrderPublicPath = /public/CadenceResourceComposeTutorialPizzaPrivatePath
     }
 }

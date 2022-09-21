@@ -1,8 +1,9 @@
-import FungibleToken from "./FungibleToken.cdc"
+/*
+* The VotingTutorialGovernanceToken contract is a sample implementation 
+* of a fungible token on Flow which can be used for voting.
+*/
 
-// VotingTutorialGovernanceToken.cdc
-//
-// The VotingTutorialGovernanceToken contract is a sample implementation of a fungible token on Flow which can be used for voting.
+import FungibleToken from "./FungibleToken.cdc"
 
 pub contract VotingTutorialGovernanceToken: FungibleToken {
 

@@ -4,16 +4,14 @@
 *   where a polling place issues ballots to addresses.
 *
 *   The run a vote, the Admin deploys the smart contract,
-*   then initializes the proposals.
-*   The array of proposals cannot be modified after it has been initialized.
+*   then adds the proposals. Further proposals can be added later.
 *
-*   Users can create ballots and vote only with their VotingTutorialGovernanceToken balance prior to when
-*   proposal was created.
+*   Users can create ballots and vote only with their 
+*   VotingTutorialGovernanceToken balance prior to when a proposal was created.
 *
 *   Every user with a ballot is allowed to approve their chosen proposals.
 *   A user can choose their votes and cast them
 *   with the tx_05_SelectAndCastVotes.cdc transaction.
-*
 */
 
 import VotingTutorialGovernanceToken from "./VotingTutorialGovernanceToken.cdc"

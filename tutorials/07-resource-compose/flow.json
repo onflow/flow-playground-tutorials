@@ -1,0 +1,21 @@
+{
+  "contracts": {
+    "BestPizzaPlace": "./contracts/BestPizzaPlace.cdc"
+  },
+  "networks": {
+    "emulator": "127.0.0.1:3569",
+    "mainnet": "access.mainnet.nodes.onflow.org:9000",
+    "testnet": "access.devnet.nodes.onflow.org:9000"
+  },
+  "accounts": {
+    "emulator-account": {
+      "address": "f8d6e0586b0a20c7",
+      "key": "27afc3cc8b11295bc3474458593d8c91641c8b266ecd1f90880cf72190d2ba7d"
+    }
+  },
+  "deployments": {
+    "emulator": {
+      "emulator-account": ["BestPizzaPlace"]
+    }
+  }
+}

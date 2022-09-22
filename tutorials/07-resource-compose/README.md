@@ -247,7 +247,7 @@ When asked, choose the local blockchain.
 ## Prepare the Pizza
 
 This will create a Pizza with Sauce and store it in the emulator-account.
-Also, the beforementioned public and private capability paths are published.
+Also, the aforementioned public and private capability paths are published.
 This is the content of the transaction:
 
 ```cadence:title=tx01_PreparePizza.cdc

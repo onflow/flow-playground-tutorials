@@ -145,7 +145,7 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
     init() {
         self.totalSupply = 0.0
 
-        /// Assign paths
+        // Assign paths
         self.VaultStoragePath = /storage/CadenceVotingTutorialVotingTutorialGovernanceTokenVaultStoragePath
         self.MinterStoragePath = /storage/CadenceVotingTutorialVotingTutorialGovernanceTokenMinterStoragePath
         self.VaultPublicPath = /public/CadenceVotingTutorialVotingTutorialGovernanceTokenVaultPublicPath

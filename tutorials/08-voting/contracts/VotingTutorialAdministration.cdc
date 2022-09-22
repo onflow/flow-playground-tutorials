@@ -56,6 +56,7 @@ pub contract VotingTutorialAdministration {
         pub vaultId: UInt64
         pub votingWeightDataSnapshot: [VotingTutorialGovernanceToken.VotingWeightData]
 
+        /// Here only some checks are done, the execution code is in the implementing resource
         pub fun vote(proposalId: Int, optionId: Int){
             pre {
                 VotingTutorialAdministration.proposals[proposalId] != nil: "Cannot vote for a proposal that doesn't exist"
@@ -112,7 +113,7 @@ pub contract VotingTutorialAdministration {
     // The Administrator resource allows to add proposals
     pub resource Administrator {
 
-        // function to initialize all the proposals for the voting
+        /// addProposals initializes all the proposals for the voting
         pub fun addProposals(_ proposals: {Int : ProposalData}) {
             pre {
                 proposals.length > 0: "Cannot add empty proposals data"
@@ -131,8 +132,8 @@ pub contract VotingTutorialAdministration {
         return <-create Ballot(recipientCap: recipientCap)
     }
 
-    /// Initializes the contract by setting the proposals,
-    /// assigns the paths and creates a new Admin resource and saves it in account storage
+    /// Initializes the contract by setting empty proposals,
+    /// assigning the paths and creating a new Admin resource and saving it in account storage
     init() {
         self.proposals = {}
 

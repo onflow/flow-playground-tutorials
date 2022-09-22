@@ -2,83 +2,76 @@
 title: 9. Voting Contract
 ---
 
-In this tutorial, we're going to deploy a contract that allows users to vote on multiple proposals that a voting administrator controls.
-
----
 With the advent of blockchain technology and smart contracts,
 it has become popular to try to create decentralized voting mechanisms that allow large groups of users to vote completely on chain.
 This tutorial will provide a trivial example for how this might be achieved by using a resource-oriented programming model.
+Two contracts will allow users to vote on multiple proposals while their voting power is determined by the balance of certain tokens.
+The voting process is controlled by an administrator via the administration contract.
 
-We'll take you through these steps to get comfortable with the Voting contract.
+---
+We'll take you through these steps to get comfortable with the voting contracts.
 
 1. Deploy the contracts to the local blockchain emulator
 2. Create two user accounts
-3. Create two voter accounts for these users
-4. Mint tokens to these two accounts
+3. Create voter accounts for these users
+4. Mint tokens to these accounts
 5. Create proposals for users to vote on
 6. Create `Ballot` resources for both voters
-7. Record and cast votes in the central Voting contract
+7. Record and cast votes in the central voting contract
 8. Read the results of the vote
-
-
-## A Voting Contract in Cadence
-
-In this contract, a `Ballot` is represented as a resource.
-A user can request a `Ballot`, and then vote for a proposal 
-and submit the `Ballot` to the central smart contract to have their vote recorded.
-Using a resource type is logical for this application,
-because if a user wants to delegate their vote,
-they can send that `Ballot` to another account.
 
 ## Setup the environment
 Navigate in a terminal window to the voting tutorial dictionary and execute:
-Execute
+
 ```console
 flow init
 ```
+
 Then, edit the configuration and add the contracts (also in the section `deployments`), it should look like this afterwards:
+
 ```json:title=flow.json
 {
-	"contracts": {
-		"FungibleToken": "./contracts/FungibleToken.cdc",
-		"VotingTutorialAdministration": "./contracts/VotingTutorialAdministration.cdc",
-		"VotingTutorialGovernanceToken": "./contracts/VotingTutorialGovernanceToken.cdc"
-	},
-	"networks": {
-		"emulator": "127.0.0.1:3569",
-		"mainnet": "access.mainnet.nodes.onflow.org:9000",
-		"testnet": "access.devnet.nodes.onflow.org:9000"
-	},
-	"accounts": {
-		"emulator-account": {
-			"address": "f8d6e0586b0a20c7",
-			"key": "39353f597de2bed6781760838a62536374bfff46b8efac5ebb450825debdd778"
-		}
-	},
-	"deployments": {
-		"emulator": {
-			"emulator-account": [
-				"FungibleToken",
-				"VotingTutorialGovernanceToken",
-				"VotingTutorialAdministration"
-			]
-		}
-	}
+    "contracts": {
+        "FungibleToken": "./contracts/FungibleToken.cdc",
+        "VotingTutorialAdministration": "./contracts/VotingTutorialAdministration.cdc",
+        "VotingTutorialGovernanceToken": "./contracts/VotingTutorialGovernanceToken.cdc"
+    },
+    //...networks, accounts...
+    "deployments": {
+        "emulator": {
+            "emulator-account": [
+                "FungibleToken",
+                "VotingTutorialGovernanceToken",
+                "VotingTutorialAdministration"
+            ]
+        }
+    }
 }
 ```
-## Run the emulator:
+
+## Run the emulator
+
 Once the configuration is saved, execute:
+
 ```console
 flow emulator
 ```
-## Deploy the project:
+
+## Deploy the project
+
 Open another terminal window and execute
+
 ```console
 flow project deploy
 ```
+
 All three contracts should be deployed.
 FungibleToken is a Cadence standard, while `VotingTutorialGovernanceToken` and `VotingTutorialAdministration` are specific to this tutorial.
-`VotingTutorialGovernanceToken` is needed in order to vote:
+`VotingTutorialGovernanceToken` is needed in order to vote, it's balance is determining the weight of vote.
+`VotingTutorialAdministration` is used for administration of the whole voting process.
+
+`VotingTutorialGovernanceToken` contains the usual vault functionality of the FungibleToken contract and adds a history of voting weight that is updated on each transfer.
+
 ```cadence:title=VotingTutorialGovernanceToken.cdc
 /*
 * The VotingTutorialGovernanceToken contract is a sample implementation 
@@ -256,14 +249,16 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
     }
 }
 ```
-`VotingTutorialAdministration` allows administration of the whole voting process:
+
+`VotingTutorialAdministration` contains a struct `ProposalData` which is used to store both the proposal and the total votes.
+Then we have two resources, a `Ballot` and an `Administrator` resource.
+A user can request a `Ballot`, and then vote for a proposal, effectively tallying the vote weight in this contract.
+Using a resource type is logical for this application, because if a user wants to delegate their vote, they can send that `Ballot` to another account.
+Access to the `Administrator` resource is needed in order to add proposals.
+
 ```cadence:title=VotingTutorialAdministration.cdc
 /*
-*
-*   In this example, we want to create a simple voting contract
-*   where a polling place issues ballots to addresses.
-*
-*   The run a vote, the Admin deploys the smart contract,
+*   To run a vote, the Admin deploys the smart contract,
 *   then adds the proposals. Further proposals can be added later.
 *
 *   Users can create ballots and vote only with their 
@@ -333,7 +328,6 @@ pub contract VotingTutorialAdministration {
         // array of VotingTutorialGovernanceToken Vault's votingWeightDataSnapshot
         pub let votingWeightDataSnapshot: [VotingTutorialGovernanceToken.VotingWeightData]
 
-
         init(recipientCap: Capability<&VotingTutorialGovernanceToken.Vault{VotingTutorialGovernanceToken.VotingWeight}>) {
             let recipientRef = recipientCap.borrow() ?? panic("Could not borrow VotingWeight reference from the Capability")
 
@@ -376,7 +370,6 @@ pub contract VotingTutorialAdministration {
                 VotingTutorialAdministration.proposals[key] = proposals[key]
             }
         }
-
     }
 
     // Creates a new Ballot
@@ -396,49 +389,230 @@ pub contract VotingTutorialAdministration {
     }
 }
 ```
-## Create two extra accounts ('acct2', 'acct3'):
+
+## Create two extra accounts ('acct2', 'acct3')
+
 ```console
 flow accounts create
 ```
+
 When asked, choose the local blockchain.
 
-## Create the voter accounts:
+## Create the voter accounts
+
+This transaction serves to create the vaults for the voters:
+
+```cadence:title=tx_01_SetupAccount.cdc
+import FungibleToken from 0xf8d6e0586b0a20c7
+import VotingTutorialGovernanceToken from 0xf8d6e0586b0a20c7
+
+/// This transaction configures an account to store and receive tokens defined by
+/// the VotingTutorialGovernanceToken contract.
+transaction {
+  let account: AuthAccount
+
+  prepare(acct: AuthAccount) {
+
+    /// A new empty Vault object
+    let vault <- VotingTutorialGovernanceToken.createEmptyVault()
+
+    // Store the vault in the account storage
+    acct.save<@FungibleToken.Vault>(<-vault, to: VotingTutorialGovernanceToken.VaultStoragePath)
+
+    log("Empty Vault stored")
+
+    // Link capability reference
+    acct.link<&VotingTutorialGovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, VotingTutorialGovernanceToken.VotingWeight}>(VotingTutorialGovernanceToken.VaultPublicPath, target: VotingTutorialGovernanceToken.VaultStoragePath)
+
+    self.account = acct
+    log("VotingTutorialGovernanceToken Vault Reference created")
+  }
+
+   post {
+        // Check that the capability was created correctly
+       getAccount(self.account.address).getCapability<&VotingTutorialGovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, VotingTutorialGovernanceToken.VotingWeight}>(VotingTutorialGovernanceToken.VaultPublicPath)
+       .check():
+         "VotingTutorialGovernanceToken Vault Reference was not created correctly"
+    }
+}
+```
+
+Execute this transaction for both users:
+
 ```console
 flow transactions send transactions/tx_01_SetupAccount.cdc --signer acct2
 flow transactions send transactions/tx_01_SetupAccount.cdc --signer acct3
 ```
 
-## Mint tokens to those two accounts:
+## Mint tokens to those two accounts
+
+```cadence:title=tx_02_MintTokens.cdc
+import FungibleToken from 0xf8d6e0586b0a20c7
+import VotingTutorialGovernanceToken from 0xf8d6e0586b0a20c7
+
+/// This transaction mints tokens and deposits them into the receivers account's vault
+transaction (recipient1: Address, recipient2: Address, amountRecipient1: UFix64, amountRecipient2: UFix64) {
+
+    /// Local variable for storing the reference to the minter resource
+    let mintingRef: &VotingTutorialGovernanceToken.VaultMinter
+
+    /// Local variables for storing the references to the Vaults of
+    /// the accounts that will receive the newly minted tokens
+    var receiver1: Capability<&AnyResource{FungibleToken.Receiver}>
+    var receiver2: Capability<&AnyResource{FungibleToken.Receiver}>
+
+    prepare(acct: AuthAccount) {
+        // Borrow a reference to the stored, private minter resource
+        self.mintingRef = acct.borrow<&VotingTutorialGovernanceToken.VaultMinter>(from: VotingTutorialGovernanceToken.MinterStoragePath)
+            ?? panic("Could not borrow a reference to the minter")
+
+        // Get the account objects
+        let recipient1Account = getAccount(recipient1)
+        let recipient2Account = getAccount(recipient2)
+
+        // Get their public receiver capabilities
+        self.receiver1 = recipient1Account.getCapability<&AnyResource{FungibleToken.Receiver}>(VotingTutorialGovernanceToken.VaultPublicPath)
+        self.receiver2 = recipient2Account.getCapability<&AnyResource{FungibleToken.Receiver}>(VotingTutorialGovernanceToken.VaultPublicPath)
+    }
+
+    execute {
+        // Mint tokens and deposit them into recipient1's Vault
+        self.mintingRef.mintTokens(amount: amountRecipient1, recipient: self.receiver1)
+        log("tokens minted and deposited to the vault of recipient1")
+        // Mint tokens and deposit them into recipient2's Vault
+        self.mintingRef.mintTokens(amount: amountRecipient2, recipient: self.receiver2)
+        log("tokens minted and deposited to the vault of recipient2")
+    }
+}
+```
+
+Execute this transaction:
+
 ```console
 flow transactions send transactions/tx_02_MintTokens.cdc "0x01cf0e2f2f715450" "0x179b6b1cb6755e31" 30.0 150.0 --signer emulator-account
 ```
 
-## Create the proposals for voting:
+## Create the proposals for voting
+
+```cadence:title=tx_03_CreateNewProposals.cdc
+import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
+
+/// This transaction allows the administrator of the VotingTutorialAdministration contract
+/// to create new proposals for voting and save them to the smart contract
+transaction {
+    /// A reference to the admin Resource
+    let adminRef: &VotingTutorialAdministration.Administrator
+    /// The proposals to add
+    let proposals: {Int : ProposalData}
+
+    prepare(admin: AuthAccount) {
+        self.adminRef = admin.borrow<&VotingTutorialAdministration.Administrator>(from: VotingTutorialAdministration.adminStoragePath)!
+
+        let ts = getCurrentBlock().timestamp
+        let food = ["Pizza", "Spaghetti", "Pancake"]
+        let proposal1 = VotingTutorialAdministration.ProposalData(name: "What's up for dinner?", options: food, blockTs: ts)
+        let oneChoice = ["Yes", "No"]
+        let proposal2 = VotingTutorialAdministration.ProposalData(name: "Let's throw a party!", options: oneChoice, blockTs: ts)
+        self.proposals = {0 : proposal1, 1 : proposal2}
+    }
+
+    execute {
+        // Call the addProposals function to create the dictionary of ProposolData
+        self.adminRef.addProposals(self.proposals)
+        log("Proposals added!")
+    }
+
+    post {
+        VotingTutorialAdministration.proposals.length == 2
+    }
+}
+```
+
+Execute this transaction:
+
 ```console
 flow transactions send transactions/tx_03_CreateNewProposals.cdc --signer emulator-account
 ```
 
-Optionally - if you want to test the 'voting timestamp > proposal timestamp' requirement, call mint again but change the token amounts.
+Optionally - if you want to test the 'voting token balance timestamp < proposal timestamp' requirement, call mint again but change the token amounts.
 This minting will not affect the voting weight, as it happened after the proposal was established.
 
-## Create new ballots:
+## Create new ballots
+
+```cadence:title=tx_04_CreateNewBallot.cdc 
+import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
+import VotingTutorialGovernanceToken from 0xf8d6e0586b0a20c7
+
+/// This transaction allows the voter with a governance token vault
+/// to create a new ballot and store it in her account
+transaction () {
+    prepare(voter: AuthAccount) {
+
+        /// A reference to the voter's VotingTutorialGovernanceToken Vault
+        let vaultRef = voter.getCapability<&VotingTutorialGovernanceToken.Vault{VotingTutorialGovernanceToken.VotingWeight}>(VotingTutorialGovernanceToken.VaultPublicPath)
+
+        /// A new Ballot attached to the voter's vault
+        let ballot <- VotingTutorialAdministration.issueBallot(recipientCap: vaultRef)
+
+        // store that ballot in the voter's account storage
+        voter.save<@VotingTutorialAdministration.Ballot>(<-ballot, to: VotingTutorialAdministration.ballotStoragePath)
+
+        log("Ballot transferred to voter")
+    }
+}
+```
+
+Execute this transaction for both users:
+
 ```console
 flow transactions send transactions/tx_04_CreateNewBallot.cdc --signer acct2
 flow transactions send transactions/tx_04_CreateNewBallot.cdc --signer acct3
 ```
-## Cast vote:
-Finally a voter can cast a vote by passing the proposal and option id (in the first case for the first proposal and the third option, in the second case for the second proposal and the first option):
+
+## Cast vote
+
+This transaction is used for the final vote casting:
+
+```cadence:title=tx_05_SelectAndCastVotes.cdc
+import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
+
+/// This transaction allows a voter to select a proposal via it's id and vote for it
+transaction (proposalId: Int, optionId: Int) {
+    prepare(voter: AuthAccount) {
+        /// The Ballot of the voter
+        let ballot <- voter.load<@VotingTutorialAdministration.Ballot>(from: VotingTutorialAdministration.ballotStoragePath)
+            ?? panic("Could not load the voter's ballot")
+
+        // Vote on the proposal and the option
+        ballot.vote(proposalId: proposalId, optionId: optionId)
+
+        // destroy resource
+        destroy ballot
+
+        log("Vote cast and tallied")
+    }
+}
+```
+
+Voters can cast their votes by passing the proposal and option id (in the first case for the first proposal and the third option, in the second case for the second proposal and the first option):
+
 ```console
 flow transactions send transactions/tx_05_SelectAndCastVotes.cdc "0" "2" --signer acct2
 flow transactions send transactions/tx_05_SelectAndCastVotes.cdc "1" "0" --signer acct3
 ```
-## Check balances:
+
+## Check balances
+
 In order to check both the last recorded balance and timestamp of the balance for the two user accounts, run this:
+
 ```console
 flow scripts execute scripts/GetVotingWeight.cdc "0x01cf0e2f2f715450" "0x179b6b1cb6755e31"
 ```
-## Check proposal outcome:
+
+## Check proposal outcome
+
 In order to see the recorded proposals outcome, run this:
+
 ```console
 flow scripts execute scripts/GetProposalsData.cdc
 ```

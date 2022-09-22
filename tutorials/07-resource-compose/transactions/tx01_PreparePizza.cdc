@@ -1,7 +1,8 @@
 import BestPizzaPlace from 0xf8d6e0586b0a20c7
 
-// This transaction creates a pizza resource and moves it to the account storage.
-// It also creates a capability in order to check the order later.
+/// This transaction creates a pizza resource and moves it to the account storage.
+/// It also creates a private capability that allows to add toppings and a public capability
+/// which allows to check the order later.
 transaction {
     let account: AuthAccount
 
@@ -11,9 +12,9 @@ transaction {
 
         let pizza <- BestPizzaPlace.createPizza(name: "Bufalina", dough: <-dough, sauce: <-sauce)
 
-        // Store the pizza
+        /// Store the pizza
         acct.save<@BestPizzaPlace.Pizza>(<-pizza, to: BestPizzaPlace.PizzaStoragePath)
-        // Link capability references
+        /// Link capability references
         acct.link<&AnyResource{BestPizzaPlace.AddTopping}>(BestPizzaPlace.PizzaAddToppingPrivatePath, target: BestPizzaPlace.PizzaStoragePath)
         acct.link<&AnyResource{BestPizzaPlace.ShowOrder}>(BestPizzaPlace.PizzaShowOrderPublicPath, target: BestPizzaPlace.PizzaStoragePath)
 
@@ -23,7 +24,7 @@ transaction {
 
     post {
         // TODO: results in failure
-        // Check that the capabilities were created correctly
+        /// Check that the capabilities were created correctly
        /*getAccount(self.account.address).getCapability<&AnyResource{BestPizzaPlace.AddTopping}(BestPizzaPlace.PizzaAddToppingPrivatePath)
        .check():
          "Pizza AddTopping Reference was not created correctly"

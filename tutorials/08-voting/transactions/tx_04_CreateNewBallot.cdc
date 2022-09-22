@@ -3,9 +3,8 @@
 import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
 import VotingTutorialGovernanceToken from 0xf8d6e0586b0a20c7
 
-
 /// This transaction allows the voter with a governance token vault
-/// to create a new ballot and store it in a voter's account
+/// to create a new ballot and store it in her account
 transaction () {
     prepare(voter: AuthAccount) {
 

@@ -301,6 +301,7 @@ Notice that only the emulator-account can add toppings, as he is the one who exe
 If the customer tries to add toppings, the transaction will fail.
 
 This is the transaction content:
+
 ```cadence:title=tx02_AddToppings.cdc
 import BestPizzaPlace from 0xf8d6e0586b0a20c7
 
@@ -333,7 +334,7 @@ Try to execute this transaction by calling:
 flow transactions send transactions/tx02_AddToppings.cdc --signer customer
 ```
 
-As you can see in the emulator window, this will result in the following error log :
+As you can see in the emulator window, this will result in the following error log:
 
 ```console
 "Could not borrow reference for adding toppings, only the cook can add toppings."

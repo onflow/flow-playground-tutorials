@@ -4,15 +4,15 @@ import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
 import VotingTutorialGovernanceToken from 0xf8d6e0586b0a20c7
 
 
-// This transaction allows the voter with goverance token vault
-// to create a new ballot and store it in a voter's account
+/// This transaction allows the voter with a governance token vault
+/// to create a new ballot and store it in a voter's account
 transaction () {
     prepare(voter: AuthAccount) {
 
-        // borrow a reference from the voter's VotingTutorialGovernanceToken Vault
+        /// A reference to the voter's VotingTutorialGovernanceToken Vault
         let vaultRef = voter.getCapability<&VotingTutorialGovernanceToken.Vault{VotingTutorialGovernanceToken.VotingWeight}>(VotingTutorialGovernanceToken.VaultPublicPath)
 
-        // create a new Ballot by calling the issueBallot function
+        /// A new Ballot attached to the voter's vault
         let ballot <- VotingTutorialAdministration.issueBallot(recipientCap: vaultRef)
 
         // store that ballot in the voter's account storage

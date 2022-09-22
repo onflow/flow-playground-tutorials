@@ -1,8 +1,5 @@
 /*
-*   In this example, we want to create a simple voting contract
-*   where a polling place issues ballots to addresses.
-*
-*   The run a vote, the Admin deploys the smart contract,
+*   To run a vote, the Admin deploys the smart contract,
 *   then adds the proposals. Further proposals can be added later.
 *
 *   Users can create ballots and vote only with their 
@@ -127,7 +124,6 @@ pub contract VotingTutorialAdministration {
                 VotingTutorialAdministration.proposals[key] = proposals[key]
             }
         }
-
     }
 
     /// issueBallot creates a new Ballot

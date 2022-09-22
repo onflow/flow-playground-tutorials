@@ -3,7 +3,7 @@ title: 10. Composable Resources
 ---
 
 In this tutorial, we're going to walk through how resources can own other resources.
-It also shows how to use a struct in order to show the resource content without moving the resource.
+It also shows how to use a struct in order to show the resource content without moving the resource, and how to use a private capability in order to restrict access.
 
 ---
 

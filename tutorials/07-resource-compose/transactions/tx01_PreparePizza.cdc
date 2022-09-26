@@ -4,7 +4,7 @@ import BestPizzaPlace from 0xf8d6e0586b0a20c7
 /// It also creates a private capability that allows to add toppings and a public capability
 /// which allows to check the order later.
 transaction {
-    let account: AuthAccount
+    let authAccount: AuthAccount
 
     prepare(acct: AuthAccount) {
         let dough <- BestPizzaPlace.createDough(grain: BestPizzaPlace.Grain.wheat, timeToBake: 20)
@@ -18,18 +18,17 @@ transaction {
         acct.link<&AnyResource{BestPizzaPlace.AddTopping}>(BestPizzaPlace.PizzaAddToppingPrivatePath, target: BestPizzaPlace.PizzaStoragePath)
         acct.link<&AnyResource{BestPizzaPlace.ShowOrder}>(BestPizzaPlace.PizzaShowOrderPublicPath, target: BestPizzaPlace.PizzaStoragePath)
 
-        self.account = acct
+        self.authAccount = acct
         log("Pizza will be prepared!")
     }
 
     post {
-        // TODO: results in failure
         /// Check that the capabilities were created correctly
-       getAccount(self.account.address).getCapability<&AnyResource{BestPizzaPlace.AddTopping}(BestPizzaPlace.PizzaAddToppingPrivatePath)
+       self.authAccount.getCapability<&AnyResource{BestPizzaPlace.AddTopping}>(BestPizzaPlace.PizzaAddToppingPrivatePath)
        .check():
          "Pizza AddTopping Reference was not created correctly"
         
-        getAccount(self.account.address).getCapability<&AnyResource{BestPizzaPlace.ShowOrder}(BestPizzaPlace.PizzaShowOrderPublicPath)
+        self.authAccount.getCapability<&AnyResource{BestPizzaPlace.ShowOrder}>(BestPizzaPlace.PizzaShowOrderPublicPath)
        .check():
          "Pizza ShowOrder Reference was not created correctly"
     }

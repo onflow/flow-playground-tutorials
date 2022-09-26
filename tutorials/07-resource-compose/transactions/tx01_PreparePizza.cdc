@@ -21,4 +21,16 @@ transaction {
         self.account = acct
         log("Pizza will be prepared!")
     }
+
+    post {
+        // TODO: results in failure
+        /// Check that the capabilities were created correctly
+       getAccount(self.account.address).getCapability<&AnyResource{BestPizzaPlace.AddTopping}(BestPizzaPlace.PizzaAddToppingPrivatePath)
+       .check():
+         "Pizza AddTopping Reference was not created correctly"
+        
+        getAccount(self.account.address).getCapability<&AnyResource{BestPizzaPlace.ShowOrder}(BestPizzaPlace.PizzaShowOrderPublicPath)
+       .check():
+         "Pizza ShowOrder Reference was not created correctly"
+    }
 }

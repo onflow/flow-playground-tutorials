@@ -5,8 +5,9 @@ title: 9. Voting Contract
 With the advent of blockchain technology and smart contracts,
 it has become popular to try to create decentralized voting mechanisms that allow large groups of users to vote completely on chain.
 This tutorial will provide a trivial example for how this might be achieved by using a resource-oriented programming model.
-Two contracts will allow users to vote on multiple proposals while their voting power is determined by the balance of certain tokens.
-The voting process is controlled by an administrator via the administration contract.
+Two contracts will allow users to vote on multiple proposals while their voting power is determined by the balance of certain tokens. 
+These so called governance tokens track the user account balance over time, thus enabling insight into the balance just before the creation of a proposal. 
+An administration contract serves for the creation of proposals and provides the ballots.
 
 ---
 We'll take you through these steps to get comfortable with the voting contracts.
@@ -21,7 +22,12 @@ We'll take you through these steps to get comfortable with the voting contracts.
 8. Read the results of the vote
 
 ## Setup the environment
-Navigate in a terminal window to the voting tutorial dictionary and execute:
+
+In this tutorial, we are introducing the [Flow CLI](https://developers.flow.com/tools/flow-cli/index), which allows us to run our code on a local blockchain emulator. 
+Please follow the link and install it on your computer. 
+
+Once installed, please download the project in the terminal by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the project folder: `cd tutorials/08-voting`. 
+Once there, please execute:
 
 ```console
 flow init
@@ -65,9 +71,9 @@ Open another terminal window and execute
 flow project deploy
 ```
 
-All three contracts should be deployed.
+All three contracts should be deployed now.
 FungibleToken is a Cadence standard, while `VotingTutorialGovernanceToken` and `VotingTutorialAdministration` are specific to this tutorial.
-`VotingTutorialGovernanceToken` is needed in order to vote, it's balance is determining the weight of vote.
+`VotingTutorialGovernanceToken` is needed in order to vote, it's balance is determining the weight of the vote.
 `VotingTutorialAdministration` is used for administration of the whole voting process.
 
 `VotingTutorialGovernanceToken` contains the usual vault functionality of the FungibleToken contract and adds a history of voting weight that is updated on each transfer.
@@ -401,11 +407,13 @@ pub contract VotingTutorialAdministration {
 
 ## Create two extra accounts ('acct2', 'acct3')
 
+You need to execute this command twice, once for account 'acct2', and again for 'acct3':
+
 ```console
 flow accounts create
 ```
 
-When asked, choose the local blockchain.
+When asked, please choose the option *Local Emulator*.
 
 ## Create the voter accounts
 
@@ -446,7 +454,7 @@ transaction {
 }
 ```
 
-Execute this transaction for both users:
+Please execute this transaction for both users:
 
 ```console
 flow transactions send transactions/tx_01_SetupAccount.cdc --signer acct2
@@ -454,6 +462,8 @@ flow transactions send transactions/tx_01_SetupAccount.cdc --signer acct3
 ```
 
 ## Mint tokens to those two accounts
+
+The public receiver capability that we just created will now serve to mint tokens to the two accounts via this transaction:
 
 ```cadence:title=tx_02_MintTokens.cdc
 import FungibleToken from 0xf8d6e0586b0a20c7
@@ -495,13 +505,15 @@ transaction (recipient1: Address, recipient2: Address, amountRecipient1: UFix64,
 }
 ```
 
-Execute this transaction:
+Please execute this transaction as the administrator, indicating both the receiving account addresses, which usually do not differ in the local environment, and the token amounts:
 
 ```console
 flow transactions send transactions/tx_02_MintTokens.cdc "0x01cf0e2f2f715450" "0x179b6b1cb6755e31" 30.0 150.0 --signer emulator-account
 ```
 
 ## Create the proposals for voting
+
+Now that the voters have governance tokens, the administrator can create proposals for voting via this transaction:
 
 ```cadence:title=tx_03_CreateNewProposals.cdc
 import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
@@ -537,7 +549,7 @@ transaction {
 }
 ```
 
-Execute this transaction:
+Please execute this transaction as the administrator:
 
 ```console
 flow transactions send transactions/tx_03_CreateNewProposals.cdc --signer emulator-account
@@ -547,6 +559,8 @@ Optionally - if you want to test the 'voting token balance timestamp < proposal 
 This minting will not affect the voting weight, as it happened after the proposal was established.
 
 ## Create new ballots
+
+Ballots which serve for voting on the existing proposals can be created by the voters themselves via this transaction:
 
 ```cadence:title=tx_04_CreateNewBallot.cdc 
 import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
@@ -571,7 +585,7 @@ transaction () {
 }
 ```
 
-Execute this transaction for both users:
+Please execute this transaction for both user accounts:
 
 ```console
 flow transactions send transactions/tx_04_CreateNewBallot.cdc --signer acct2
@@ -580,7 +594,7 @@ flow transactions send transactions/tx_04_CreateNewBallot.cdc --signer acct3
 
 ## Cast vote
 
-This transaction is used for the final vote casting:
+Now that each voter has a ballot, they can finally cast their vote via this transaction:
 
 ```cadence:title=tx_05_SelectAndCastVotes.cdc
 import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
@@ -603,7 +617,7 @@ transaction (proposalId: Int, optionId: Int) {
 }
 ```
 
-Voters can cast their votes by passing the proposal and option id (in the first case for the first proposal and the third option, in the second case for the second proposal and the first option):
+Both the proposal and option id need to be indicated as follows (in the first case for the first proposal and the third option, in the second case for the second proposal and the first option):
 
 ```console
 flow transactions send transactions/tx_05_SelectAndCastVotes.cdc "0" "2" --signer acct2

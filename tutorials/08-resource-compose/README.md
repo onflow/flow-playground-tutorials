@@ -7,7 +7,7 @@ We will also see how a struct can be used in order to show the content of a reso
 
 ---
 
-The fact that resources can be nested into other resources is one of the corner stones for the composability which the Flow blockchain provides. 
+The fact that resources can be nested into other resources is one of the cornerstones for the composability which the Flow blockchain provides. 
 To illustrate how this feature works on Flow, we are going to work with a simple example, a pizza that is modeled as a resource and contains ingredients, which are also resources. 
 There are two participants, the customer and the cook. The customer is only allowed to review the order, while the cook can add toppings. 
 This separation is enabled through the use of both a public and a private capability and also a struct. 

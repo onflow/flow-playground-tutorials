@@ -16,8 +16,8 @@ If you haven't yet followed the [Voting Tutorial](https://developers.flow.com/ca
 This will allow us to run our code on a local blockchain emulator. 
 
 You will also need a local copy of the tutorials code, which you should have downloaded in the voting tutorial. 
-If not, please download the project in the terminal by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the project folder: `cd tutorials/07-resource-compose`. 
-Once installed, go to the project folder in your terminal. 
+If not, please download the project in the terminal by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the project folder: `cd flow-playground-tutorials/tutorials/08-resource-compose`. 
+
 Here you will need to follow these steps for a great pizza: 
 
 1. Deploy the project, which will add the Pizza, Dough, Sauce and Topping resource definitions to the emulator-account

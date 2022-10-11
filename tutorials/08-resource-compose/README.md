@@ -28,7 +28,7 @@ Here you will need to follow these steps for a great pizza:
 
 ## Preparation
 
-First, please run the emulator: 
+This time, the emulator configuration file `flow.json`is already provided, so you can run the emulator right ahead: 
 ```console
 flow emulator
 ```

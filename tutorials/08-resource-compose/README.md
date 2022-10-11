@@ -12,9 +12,11 @@ To illustrate how this feature works on Flow, we are going to work with a simple
 There are two participants, the customer and the cook. The customer is only allowed to review the order, while the cook can add toppings. 
 This separation is enabled through the use of both a public and a private capability and also a struct. 
 
-In this tutorial, we are introducing the [Flow CLI](https://developers.flow.com/tools/flow-cli/index), which allows us to run our code on a local blockchain emulator. 
-Please follow the link, and install it on your computer. 
+If you haven't yet followed the [Voting Tutorial](https://developers.flow.com/cadence/tutorial/09-voting) where you install the [Flow CLI](https://developers.flow.com/tools/flow-cli/index), please do that now.
+This will allow us to run our code on a local blockchain emulator. 
 
+You will also need a local copy of the tutorials code, which you should have downloaded in the voting tutorial. 
+If not, please download the project in the terminal by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the project folder: `cd tutorials/07-resource-compose`. 
 Once installed, go to the project folder in your terminal. 
 Here you will need to follow these steps for a great pizza: 
 

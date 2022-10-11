@@ -2,13 +2,21 @@
 title: 10. Composable Resources
 ---
 
-In this tutorial, we're going to walk through how resources can own other resources.
-It also shows how to use a struct in order to show the resource content without moving the resource, and how to use a private capability in order to restrict access.
+In this tutorial, we're going to walk you through how resources can own other resources.
+We will also see how a struct can be used in order to show the content of a resource without moving the resource itself, and how a private capability allows for restricted access.
 
 ---
 
-Resources owning other resources is a powerful feature in the world of blockchain and smart contracts. 
-To showcase how this feature works on Flow, this tutorial will take you through these steps with a pizza resource composed of ingredient resources:
+The fact that resources can be nested into other resources is one of the corner stones for the composability which the Flow blockchain provides. 
+To illustrate how this feature works on Flow, we are going to work with a simple example, a pizza that is modeled as a resource and contains ingredients, which are also resources. 
+There are two participants, the customer and the cook. The customer is only allowed to review the order, while the cook can add toppings. 
+This separation is enabled through the use of both a public and a private capability and also a struct. 
+
+In this tutorial, we are introducing the [Flow CLI](https://developers.flow.com/tools/flow-cli/index), which allows us to run our code on a local blockchain emulator. 
+Please follow the link, and install it on your computer. 
+
+Once installed, go to the project folder in your terminal. 
+Here you will need to follow these steps for a great pizza: 
 
 1. Deploy the project, which will add the Pizza, Dough, Sauce and Topping resource definitions to the emulator-account
 2. Create an account for the customer
@@ -18,12 +26,12 @@ To showcase how this feature works on Flow, this tutorial will take you through 
 
 ## Preparation
 
-Run the emulator
+First, please run the emulator: 
 ```console
 flow emulator
 ```
 
-Deploy the project in another window
+Then, open another terminal window and deploy the project: 
 ```console
 flow project deploy
 ```
@@ -237,12 +245,13 @@ But let's go on with the next step.
 
 ## Create a customer account
 
+Please enter this command: 
+
 ```console
 flow accounts create
 ```
 
-In this tutorial, the name 'customer' is used.
-When asked, choose *Local Emulator*.
+Please choose the name 'customer' and then the option *Local Emulator*.
 
 ## Prepare the Pizza
 

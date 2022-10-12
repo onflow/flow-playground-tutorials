@@ -24,16 +24,17 @@ We'll take you through these steps to get comfortable with the voting contracts.
 ## Setup the environment
 
 In this tutorial, we are introducing the [Flow CLI](https://developers.flow.com/tools/flow-cli/index), which allows us to run our code on a local blockchain emulator. 
-Please follow the link and install it on your computer. 
+Please follow the link and install it on your computer. You should now be able to call it by simply entering `flow`, which will show you a list with all commands.
+The CLI also contains the blockchain emulator, please take a look at the [Flow CLI subsection](https://developers.flow.com/tools/flow-cli/start-emulator) for a brief overview, more details are covered in the [ReadMe](https://github.com/onflow/flow-emulator/#readme).
 
 Once installed, please download the project in the terminal by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the project folder: `cd tutorials/08-voting`. 
-Once there, please execute:
+Once there, please execute this command which will create an initial configuration:
 
 ```console
 flow init
 ```
 
-Then, edit the configuration and add the contracts (also in the section `deployments`), it should look like this afterwards:
+Then, edit the configuration and add both the `contracts` and the `deployments` section, this is needed for the deployment of the project:
 
 ```json:title=flow.json
 {
@@ -43,6 +44,7 @@ Then, edit the configuration and add the contracts (also in the section `deploym
         "VotingTutorialGovernanceToken": "./contracts/VotingTutorialGovernanceToken.cdc"
     },
     //...networks, accounts...
+    },
     "deployments": {
         "emulator": {
             "emulator-account": [
@@ -57,7 +59,7 @@ Then, edit the configuration and add the contracts (also in the section `deploym
 
 ## Run the emulator
 
-Once the configuration is saved, execute:
+Once the configuration is saved, you can start the emulator:
 
 ```console
 flow emulator
@@ -65,7 +67,7 @@ flow emulator
 
 ## Deploy the project
 
-Open another terminal window and execute
+Open another terminal window (check that you remain in the project folder) and deploy the project:
 
 ```console
 flow project deploy
@@ -291,6 +293,9 @@ pub contract VotingTutorialAdministration {
         /// When the proposal was created
         pub let blockTs: UFix64
         /// The total votes per option, as represented by the accumulated balances of voters
+        // "pub(set)" - this access modifier gives write access to everyone, 
+        // so the Ballot resource can update it.
+        // see https://developers.flow.com/cadence/language/access-control for more information
         pub(set) var votes: {Int : UFix64}
         /// Used to record if a voter as represented by the vault id has already voted
         pub(set) var voters: {UInt64: Bool}
@@ -407,13 +412,12 @@ pub contract VotingTutorialAdministration {
 
 ## Create two extra accounts ('acct2', 'acct3')
 
-You need to execute this command twice, once for account 'acct2', and again for 'acct3':
+The following command creates a user account, you need to execute it twice, once for account 'acct2', and again for 'acct3'.
+When asked, please choose the option *Local Emulator*.
 
 ```console
 flow accounts create
 ```
-
-When asked, please choose the option *Local Emulator*.
 
 ## Create the voter accounts
 
@@ -585,7 +589,7 @@ transaction () {
 }
 ```
 
-Please execute this transaction for both user accounts:
+Please execute this transaction twice so that both users are able to vote:
 
 ```console
 flow transactions send transactions/tx_04_CreateNewBallot.cdc --signer acct2
@@ -626,7 +630,7 @@ flow transactions send transactions/tx_05_SelectAndCastVotes.cdc "1" "0" --signe
 
 ## Check balances
 
-In order to check both the last recorded balance and timestamp of the balance for the two user accounts, run this:
+The script `GetVotingWeight.cdc` allows you to check both the last recorded balance and timestamp of the balance for the two user accounts:
 
 ```console
 flow scripts execute scripts/GetVotingWeight.cdc "0x01cf0e2f2f715450" "0x179b6b1cb6755e31"
@@ -634,7 +638,7 @@ flow scripts execute scripts/GetVotingWeight.cdc "0x01cf0e2f2f715450" "0x179b6b1
 
 ## Check proposal outcome
 
-In order to see the recorded proposals outcome, run this:
+In order to see the recorded proposals outcome, run the `GetProposalsData` script:
 
 ```console
 flow scripts execute scripts/GetProposalsData.cdc

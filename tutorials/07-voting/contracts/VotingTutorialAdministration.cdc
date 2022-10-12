@@ -31,6 +31,9 @@ pub contract VotingTutorialAdministration {
         /// When the proposal was created
         pub let blockTs: UFix64
         /// The total votes per option, as represented by the accumulated balances of voters
+        // "pub(set)" - this access modifier gives write access to everyone, 
+        // so the Ballot resource can update it.
+        // see https://developers.flow.com/cadence/language/access-control for more information
         pub(set) var votes: {Int : UFix64}
         /// Used to record if a voter as represented by the vault id has already voted
         pub(set) var voters: {UInt64: Bool}

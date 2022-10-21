@@ -9,6 +9,9 @@ Two contracts will allow users to vote on multiple proposals while their voting 
 These so called governance tokens track the user account balance over time, thus enabling insight into the balance just before the creation of a proposal. 
 An administration contract serves for the creation of proposals and provides the ballots.
 
+Other than in the previous tutorials, this time we will work with a local blockchain on your computer.  
+
+This can be achieved by using the [Flow CLI](https://developers.flow.com/tools/flow-cli/index), which allows us to run our code on a local blockchain emulator. The emulator comes bundled with the `Flow CLI`. The `Flow CLI` serves for managing the emulator and all files used in the interaction with the blockchain: Smart contracts, transactions and script files. It also allows you to generate an initial project configuration file, and to create accounts.  
 ---
 We'll take you through these steps to get comfortable with the voting contracts.
 
@@ -23,18 +26,19 @@ We'll take you through these steps to get comfortable with the voting contracts.
 
 ## Setup the environment
 
-In this tutorial, we are introducing the [Flow CLI](https://developers.flow.com/tools/flow-cli/index), which allows us to run our code on a local blockchain emulator. 
-Please follow the link and install it on your computer. You should now be able to call it by simply entering `flow`, which will show you a list with all commands.
-The CLI also contains the blockchain emulator, please take a look at the [Flow CLI subsection](https://developers.flow.com/tools/flow-cli/start-emulator) for a brief overview, more details are covered in the [ReadMe](https://github.com/onflow/flow-emulator/#readme).
+Please follow [this link](https://developers.flow.com/tools/flow-cli/install) for instructions on how to install it on your computer. You should now be able to call it by simply entering `flow`, which will show you a list with all possible commands.
+The CLI also contains the [Flow Emulator](https://developers.flow.com/tools/emulator/index), a gRPC server that implements the Flow Access API. Please take a look at the [Flow CLI subsection](https://developers.flow.com/tools/flow-cli/start-emulator) for a brief overview, more details are covered in the [ReadMe](https://github.com/onflow/flow-emulator/#readme).
 
-Once installed, please download the project in the terminal by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the project folder: `cd tutorials/08-voting`. 
-Once there, please execute this command which will create an initial configuration:
+Once installed, please download the project in the terminal by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the project folder: `cd tutorials/08-voting`.  
+One thing we deliberately didn't include in the repository is the project configuration, which is contained in a file called `flow.json`. It lists the various components involved in the deployment of your project on the blockchain: Smart contracts, user accounts, and the different network URLs. You can read more about it [here](https://developers.flow.com/tools/flow-cli/configuration).  
+
+Now we generate an initial configuration by executing this command inside the project folder:
 
 ```console
 flow init
 ```
 
-Then, edit the configuration and add both the `contracts` and the `deployments` section, this is needed for the deployment of the project:
+At the moment, it only contains the default networks and a default admin user account. Most importantly, it is still missing information about the smart contracts that need to be deployed on the blockchain emulator. For this, we need to add two sections, `contracts` and `deployments`. The first one simply lists the relative paths to all the contracts that you want to deploy, the latter one defines which contracts you want to deploy to which accounts on which networks. Let's edit the configuration and add both the `contracts` and the `deployments` section, laying the ground for deployment to the local emulator:
 
 ```json:title=flow.json
 {
@@ -59,7 +63,7 @@ Then, edit the configuration and add both the `contracts` and the `deployments` 
 
 ## Run the emulator
 
-Once the configuration is saved, you can start the emulator:
+Once the configuration is saved, you can start the emulator which provides you with a local blockchain:
 
 ```console
 flow emulator
@@ -67,13 +71,14 @@ flow emulator
 
 ## Deploy the project
 
-Open another terminal window (check that you remain in the project folder) and deploy the project:
+Open another terminal window (check that you remain in the project folder) and deploy the project. This relies on the configuration file, which should now contain information about all three smart contracts as shown in the Setup section above.
 
 ```console
 flow project deploy
 ```
 
-All three contracts should be deployed now.
+All three contracts should be deployed now to the local blockchain.  
+
 FungibleToken is a Cadence standard, while `VotingTutorialGovernanceToken` and `VotingTutorialAdministration` are specific to this tutorial.
 `VotingTutorialGovernanceToken` is needed in order to vote, it's balance is determining the weight of the vote.
 `VotingTutorialAdministration` is used for administration of the whole voting process.
@@ -412,8 +417,12 @@ pub contract VotingTutorialAdministration {
 
 ## Create two extra accounts ('acct2', 'acct3')
 
-The following command creates a user account, you need to execute it twice, once for account 'acct2', and again for 'acct3'.
-When asked, please choose the option *Local Emulator*.
+In the rest of this tutorial, we will use transactions and scripts which interact with the deployed contracts.  
+The transactions which are concerned with the expression of the voter will need to be authorized by the voters themselves.  
+Therefore we are going to create two voter accounts. In a first step, we are creating the user accounts.  
+
+The following command creates a user account, you need to execute it twice, once for an account named 'acct2', and again for 'acct3'.
+When asked, please choose the option *Local Emulator*. Enter 'y' for acceptance at the end:  
 
 ```console
 flow accounts create
@@ -421,7 +430,8 @@ flow accounts create
 
 ## Create the voter accounts
 
-This transaction serves to create the vaults for the voters:
+The next transaction serves to create the governance token vault for a voter, effectively giving the user the general ability to vote with governance tokens.  
+The vault will later be used in order to get a ballot from the administration contract, which can then be used to vote on proposals which the administrator created.  
 
 ```cadence:title=tx_01_SetupAccount.cdc
 import FungibleToken from 0xf8d6e0586b0a20c7
@@ -467,7 +477,8 @@ flow transactions send transactions/tx_01_SetupAccount.cdc --signer acct3
 
 ## Mint tokens to those two accounts
 
-The public receiver capability that we just created will now serve to mint tokens to the two accounts via this transaction:
+Now that both user accounts have empty governance token vaults and a receiver capability which allows them to receive tokens,  
+we can now mint tokens to the accounts via this transaction, which uses the capabilities as arguments to the `mintTokens` function:
 
 ```cadence:title=tx_02_MintTokens.cdc
 import FungibleToken from 0xf8d6e0586b0a20c7
@@ -509,7 +520,7 @@ transaction (recipient1: Address, recipient2: Address, amountRecipient1: UFix64,
 }
 ```
 
-Please execute this transaction as the administrator, indicating both the receiving account addresses, which usually do not differ in the local environment, and the token amounts:
+Please execute this transaction as the administrator, indicating both the receiving account addresses (which usually do not differ in the local environment), and the token amounts:
 
 ```console
 flow transactions send transactions/tx_02_MintTokens.cdc "0x01cf0e2f2f715450" "0x179b6b1cb6755e31" 30.0 150.0 --signer emulator-account
@@ -517,7 +528,8 @@ flow transactions send transactions/tx_02_MintTokens.cdc "0x01cf0e2f2f715450" "0
 
 ## Create the proposals for voting
 
-Now that the voters have governance tokens, the administrator can create proposals for voting via this transaction:
+Now that the voters have governance tokens, the administrator can create proposals for voting via the next transaction.  
+It's important that the governance tokens were minted before the creation of the proposals, as only the last governance token balance before proposal creation counts when voting happens.
 
 ```cadence:title=tx_03_CreateNewProposals.cdc
 import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
@@ -564,7 +576,8 @@ This minting will not affect the voting weight, as it happened after the proposa
 
 ## Create new ballots
 
-Ballots which serve for voting on the existing proposals can be created by the voters themselves via this transaction:
+Now the voters can get their ballots which allow them to vote on the existing proposals.  
+They can create and save them to their account storage themselves via this transaction:  
 
 ```cadence:title=tx_04_CreateNewBallot.cdc 
 import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
@@ -598,7 +611,7 @@ flow transactions send transactions/tx_04_CreateNewBallot.cdc --signer acct3
 
 ## Cast vote
 
-Now that each voter has a ballot, they can finally cast their vote via this transaction:
+Now that each voter has a ballot, they can finally cast their vote via this transaction which takes both the proposal id and the chosen option id as arguments:
 
 ```cadence:title=tx_05_SelectAndCastVotes.cdc
 import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
@@ -621,7 +634,7 @@ transaction (proposalId: Int, optionId: Int) {
 }
 ```
 
-Both the proposal and option id need to be indicated as follows (in the first case for the first proposal and the third option, in the second case for the second proposal and the first option):
+Both the proposal and option id need to be indicated as in the following example, counting from '0' upwards (in the first case for the first proposal and the third option, in the second case for the second proposal and the first option):
 
 ```console
 flow transactions send transactions/tx_05_SelectAndCastVotes.cdc "0" "2" --signer acct2
@@ -630,7 +643,7 @@ flow transactions send transactions/tx_05_SelectAndCastVotes.cdc "1" "0" --signe
 
 ## Check balances
 
-The script `GetVotingWeight.cdc` allows you to check both the last recorded balance and timestamp of the balance for the two user accounts:
+If you want to have an insight into the last recorded balance and timestamp of the balance for the two user accounts, you can use the script `GetVotingWeight.cdc`, indication both addresses:
 
 ```console
 flow scripts execute scripts/GetVotingWeight.cdc "0x01cf0e2f2f715450" "0x179b6b1cb6755e31"
@@ -638,8 +651,13 @@ flow scripts execute scripts/GetVotingWeight.cdc "0x01cf0e2f2f715450" "0x179b6b1
 
 ## Check proposal outcome
 
-In order to see the recorded proposals outcome, run the `GetProposalsData` script:
+Finally, in order to see the recorded proposals outcome, run the `GetProposalsData` script:
 
 ```console
 flow scripts execute scripts/GetProposalsData.cdc
 ```
+
+## Summary
+
+We hope that this was a good introduction to the local blockchain emulator and the `Flow CLI` in general.  
+You should feel comfortable now with the local tools and the configuration.  

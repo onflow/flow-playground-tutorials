@@ -35,7 +35,7 @@ The CLI also contains the [Flow Emulator](https://developers.flow.com/tools/emul
 Once installed, please download the project in the terminal by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the project folder: `cd tutorials/08-voting`.  
 One thing we deliberately didn't include in the repository is the project configuration, which is contained in a file called `flow.json`. It lists the various components involved in the deployment of your project on the blockchain: Smart contracts, user accounts, and the different network URLs. You can read more about it [in the documentation](https://developers.flow.com/tools/flow-cli/configuration).  
 
-Now we generate an initial configuration by executing this command inside the project folder:
+We can generate an initial `flow.json` configuration file by executing this command inside the project folder:
 
 ```console
 flow init

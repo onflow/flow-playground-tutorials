@@ -84,7 +84,7 @@ All three contracts should be deployed now to the local blockchain.
 
 FungibleToken is a Cadence standard, while `VotingTutorialGovernanceToken` and `VotingTutorialAdministration` are specific to this tutorial. A good introduction to fungible tokens is given in the [Fungible Tokens tutorial](https://developers.flow.com/cadence/tutorial/06-fungible-tokens): "Some of the most popular contract classes on blockchains today are fungible tokens. These contracts create homogeneous tokens that can be transferred to other users and spent as currency (e.g., ERC-20 on Ethereum)."  
 Furthermore, the [Github repository](https://github.com/onflow/flow-ft) specifies: "The standard consists of a contract interface called FungibleToken that requires implementing contracts to define a Vault resource that represents the tokens that an account owns. Each account that owns tokens will have a Vault stored in its account storage. Users call functions on each other's Vaults to send and receive tokens."  
-`VotingTutorialGovernanceToken` is an implementation of the Fungible Token standard and needed in order to vote, the voter account's vault balance is determining the weight of the vote. It's specialty is that it stores a history of voting weight that is updated on each transfer.  
+`VotingTutorialGovernanceToken` is an implementation of the Fungible Token standard and needed in order to vote, the voter account's vault balance determines the weight of the vote. Its specialty is that it stores a history of voting weight that is updated on each transfer.  
 `VotingTutorialAdministration` is used for administration of the whole voting process.
 
 This is the code for `VotingTutorialGovernanceToken`:  

@@ -66,7 +66,7 @@ At the moment, it only contains the default networks and a default admin user ac
 
 ## Run the emulator
 
-Once the configuration is saved, you can start the emulator which provides you with a local blockchain:
+Once the configuration is saved, you can start the emulator, a gRPC server that implements the Flow Access API and so provides you with a local blockchain:
 
 ```console
 flow emulator

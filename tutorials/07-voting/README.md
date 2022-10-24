@@ -11,9 +11,12 @@ An administration contract serves for the creation of proposals and provides the
 
 Other than in the previous tutorials, this time we will work with a local blockchain on your computer.  
 
-This can be achieved by using the [Flow CLI](https://developers.flow.com/tools/flow-cli/index), which allows us to run our code on a local blockchain emulator. The emulator comes bundled with the `Flow CLI`. The `Flow CLI` serves for managing the emulator and all files used in the interaction with the blockchain: Smart contracts, transactions and script files. It also allows you to generate an initial project configuration file, and to create accounts.  
+This can be achieved by using the [Flow CLI](https://developers.flow.com/tools/flow-cli/index), which allows us to run our code on a local blockchain emulator. The emulator comes bundled with the `Flow CLI`. The `Flow CLI` serves for managing the emulator and all files used in the interaction with the blockchain: Smart contracts, transactions and script files. It also allows you to generate an initial project configuration file, and to create accounts or even generate a default app.  
+Furthermore, the Flow CLI also allows you to query the local blockchain, testnet and mainnet for various information regarding e.g. the network status, or different entities.  
+
 ---
-We'll take you through these steps to get comfortable with the voting contracts.
+Let's focus on the procedure now.  
+We'll take you through the following steps to get comfortable with the voting contracts and the transactions:  
 
 1. Deploy the contracts to the local blockchain emulator
 2. Create two user accounts
@@ -30,7 +33,7 @@ Please follow [this link](https://developers.flow.com/tools/flow-cli/install) fo
 The CLI also contains the [Flow Emulator](https://developers.flow.com/tools/emulator/index), a gRPC server that implements the Flow Access API. Please take a look at the [Flow CLI subsection](https://developers.flow.com/tools/flow-cli/start-emulator) for a brief overview, more details are covered in the [ReadMe](https://github.com/onflow/flow-emulator/#readme).
 
 Once installed, please download the project in the terminal by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the project folder: `cd tutorials/08-voting`.  
-One thing we deliberately didn't include in the repository is the project configuration, which is contained in a file called `flow.json`. It lists the various components involved in the deployment of your project on the blockchain: Smart contracts, user accounts, and the different network URLs. You can read more about it [here](https://developers.flow.com/tools/flow-cli/configuration).  
+One thing we deliberately didn't include in the repository is the project configuration, which is contained in a file called `flow.json`. It lists the various components involved in the deployment of your project on the blockchain: Smart contracts, user accounts, and the different network URLs. You can read more about it [in the documentation](https://developers.flow.com/tools/flow-cli/configuration).  
 
 Now we generate an initial configuration by executing this command inside the project folder:
 

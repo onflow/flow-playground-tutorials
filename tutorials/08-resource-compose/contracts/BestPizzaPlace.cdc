@@ -138,7 +138,7 @@ pub contract BestPizzaPlace {
         }
 
         /// showOrder allows to view the order by returning an Order struct,
-        /// thereby obviation the need for moving the Pizza resource
+        /// thereby obviates the need for moving the Pizza resource
         pub fun showOrder(): Order {
             let toppingNames: [String] = []
             //iteration is a bit special because of https://github.com/onflow/cadence/issues/704

@@ -82,12 +82,45 @@ flow project deploy
 
 All three contracts should be deployed now to the local blockchain.  
 
-FungibleToken is a Cadence standard, while `VotingTutorialGovernanceToken` and `VotingTutorialAdministration` are specific to this tutorial. A good introduction to fungible tokens is given in the [Fungible Tokens tutorial](https://developers.flow.com/cadence/tutorial/06-fungible-tokens): "Some of the most popular contract classes on blockchains today are fungible tokens. These contracts create homogeneous tokens that can be transferred to other users and spent as currency (e.g., ERC-20 on Ethereum)."  
+`FungibleToken` is a Cadence standard, while `VotingTutorialGovernanceToken` and `VotingTutorialAdministration` are specific to this tutorial. A good definition of fungible tokens is given in the [Fungible Tokens tutorial](https://developers.flow.com/cadence/tutorial/06-fungible-tokens): "Some of the most popular contract classes on blockchains today are fungible tokens. These contracts create homogeneous tokens that can be transferred to other users and spent as currency (e.g., ERC-20 on Ethereum)."  
 Furthermore, the [Github repository](https://github.com/onflow/flow-ft) specifies: "The standard consists of a contract interface called FungibleToken that requires implementing contracts to define a Vault resource that represents the tokens that an account owns. Each account that owns tokens will have a Vault stored in its account storage. Users call functions on each other's Vaults to send and receive tokens."  
 `VotingTutorialGovernanceToken` is an implementation of the Fungible Token standard and needed in order to vote, the voter account's vault balance determines the weight of the vote. Its specialty is that it stores a history of voting weight that is updated on each transfer.  
-`VotingTutorialAdministration` is used for administration of the whole voting process.
+The voting weight is saved in this struct, which stores the balance and the time:
+```cadence:title=VotingTutorialGovernanceToken.cdc
+pub struct VotingWeightData {
+    pub let vaultBalance: UFix64
+    pub let blockTs: UFix64
 
-This is the code for `VotingTutorialGovernanceToken`:  
+    init(vaultBalance: UFix64, blockTs: UFix64) {
+        self.vaultBalance = vaultBalance
+        self.blockTs = blockTs
+    }
+}
+```
+The voting weights over time are stored in an array specified by the `VotingWeight` resource interface.
+The `vaultId` is generated and unique and used by the `VotingTutorialAdministration` contract to prohibit voting more than once.  
+```cadence:title=VotingTutorialGovernanceToken.cdc
+pub resource interface VotingWeight {
+    pub let vaultId: UInt64
+    pub let votingWeightDataSnapshot: [VotingWeightData]
+}
+```
+The resource `Vault` is implementing this interface, as well as `Provider`, `Receiver`, and `Balance`, which are specified in `FungibleToken`. The latter three allow for the basic token functionality of withdrawing and receiving tokens as well as reading the current balance.  
+Lastly, there is a resource called `VaultMinter`, which provides the admin with a function to mint tokens to a receiver, 
+given as a capability of the needed type - `&AnyResource{Receiver}` can be any resource that implements the Receiver interface:  
+```cadence:title=VotingTutorialGovernanceToken.cdc
+pub fun mintTokens(amount: UFix64, recipient: Capability<&AnyResource{FungibleToken.Receiver}>) {
+    let recipientRef = recipient.borrow()
+        ?? panic("Could not borrow a receiver reference to the vault")
+
+    VotingTutorialGovernanceToken.totalSupply = VotingTutorialGovernanceToken.totalSupply + UFix64(amount)
+    recipientRef.deposit(from: <-create Vault(balance: amount))
+
+    emit TokensMinted(amount: amount)
+}
+```
+
+This is the total code for `VotingTutorialGovernanceToken`:  
 
 ```cadence:title=VotingTutorialGovernanceToken.cdc
 /*
@@ -261,12 +294,44 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
     }
 }
 ```
+`VotingTutorialAdministration` is used for administration of the whole voting process. It contains a struct `ProposalData` which is used to store the proposal as well as the total votes and a voter registry:
+```cadence:title=VotingTutorialAdministration.cdc
+pub struct ProposalData {
+    /// The name of the proposal
+    pub let name: String
+    /// Possible options
+    pub let options: [String]
+    /// When the proposal was created
+    pub let blockTs: UFix64
+    /// The total votes per option, as represented by the accumulated balances of voters
+    // "pub(set)" - this access modifier gives write access to everyone, 
+    // so the Ballot resource can update it.
+    // see https://developers.flow.com/cadence/language/access-control for more information
+    pub(set) var votes: {Int : UFix64}
+    /// Used to record if a voter as represented by the vault id has already voted
+    pub(set) var voters: {UInt64: Bool}
 
-`VotingTutorialAdministration` contains a struct `ProposalData` which is used to store both the proposal and the total votes.
-Then we have two resources, a `Ballot` and an `Administrator` resource.
+    init(name: String, options: [String], blockTs: UFix64) {
+        self.name = name
+        self.options = options
+        self.blockTs = blockTs
+        self.votes = {}
+        for index, option in options {
+            /// Needed because we force unwrap later
+            self.votes[index] = 0.0
+        }
+        self.voters = {}
+    }
+}
+```
+
+Then there is a `Votable` resource interface with the `vote` function which is implemented by the `Ballot` resource.  
 A user can request a `Ballot`, and then vote for a proposal, effectively tallying the vote weight in this contract.
 Using a resource type is logical for this application, because if a user wants to delegate their vote, they can send that `Ballot` to another account.
-Access to the `Administrator` resource is needed in order to add proposals.
+Lastly, an `Administrator` resource allows to add proposals.
+The contract function `issueBallot` gives a ballot to a `VotingTutorialGovernanceToken.Vault` capability.  
+
+This is the whole content of the contract:
 
 ```cadence:title=VotingTutorialAdministration.cdc
 /*

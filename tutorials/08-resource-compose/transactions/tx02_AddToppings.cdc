@@ -15,7 +15,7 @@ transaction {
         let topping2 <- BestPizzaPlace.createTopping(name: "Basil", addBeforeBaking: false)
 
         self.addToppingRef.addTopping(topping: <-topping1)
-        /// Baking happening in between ;-)
+        // Baking happening in between ;-)
         self.addToppingRef.addTopping(topping: <-topping2)
 
         log("Toppings added!")

@@ -12,9 +12,9 @@ transaction {
 
         let pizza <- BestPizzaPlace.createPizza(name: "Bufalina", dough: <-dough, sauce: <-sauce)
 
-        /// Store the pizza
+        // Store the pizza
         acct.save<@BestPizzaPlace.Pizza>(<-pizza, to: BestPizzaPlace.PizzaStoragePath)
-        /// Link capability references
+        // Link capability references
         acct.link<&AnyResource{BestPizzaPlace.AddTopping}>(BestPizzaPlace.PizzaAddToppingPrivatePath, target: BestPizzaPlace.PizzaStoragePath)
         acct.link<&AnyResource{BestPizzaPlace.ShowOrder}>(BestPizzaPlace.PizzaShowOrderPublicPath, target: BestPizzaPlace.PizzaStoragePath)
 
@@ -23,13 +23,11 @@ transaction {
     }
 
     post {
-        /// Check that the capabilities were created correctly
-       self.authAccount.getCapability<&AnyResource{BestPizzaPlace.AddTopping}>(BestPizzaPlace.PizzaAddToppingPrivatePath)
-       .check():
-         "Pizza AddTopping Reference was not created correctly"
+        // Check that the capabilities were created correctly
+        self.authAccount.getCapability<&AnyResource{BestPizzaPlace.AddTopping}>(BestPizzaPlace.PizzaAddToppingPrivatePath)
+            .check(): "Pizza AddTopping Reference was not created correctly"
         
         self.authAccount.getCapability<&AnyResource{BestPizzaPlace.ShowOrder}>(BestPizzaPlace.PizzaShowOrderPublicPath)
-       .check():
-         "Pizza ShowOrder Reference was not created correctly"
+            .check(): "Pizza ShowOrder Reference was not created correctly"
     }
 }

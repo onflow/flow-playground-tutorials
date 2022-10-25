@@ -7,18 +7,23 @@ We will also see how a struct can be used in order to show the content of a reso
 
 ---
 
-The fact that resources can be nested into other resources is one of the cornerstones for the composability which the Flow blockchain provides. 
-To illustrate how this feature works on Flow, we are going to work with a simple example, a pizza that is modeled as a resource and contains ingredients, which are also resources. 
-There are two participants, the customer and the cook. The customer is only allowed to review the order, while the cook can add toppings. 
-This separation is enabled through the use of both a public and a private capability and also a struct. 
+The fact that resources can be nested into other resources is one of the cornerstones for the composability which the Flow blockchain provides.  
+To illustrate how this feature works on Flow, we are going to work with a simple example, a pizza that is modeled as a resource and contains ingredients, which are also resources.  
+There are two participants, the customer and the cook. The customer is only allowed to review the order, while the cook can add toppings.  
+This separation is enabled through the use of both a public and a private capability and also a struct. Private capabilities can only be accessed from authorized accounts, please take a look at the [documentation](https://developers.flow.com/cadence/language/capability-based-access-control).  
 
 If you haven't yet followed the [Voting Tutorial](https://developers.flow.com/cadence/tutorial/09-voting) where you install the [Flow CLI](https://developers.flow.com/tools/flow-cli/index), please do that now.
-This will allow us to run our code on a local blockchain emulator. 
+This will allow us to run our code on a local blockchain emulator. That tutorial will also give you an introduction to the `CLI`, so it's better to finish it before starting with this tutorial.  
 
-You will also need a local copy of the tutorials code, which you should have downloaded in the voting tutorial. 
-If not, please download the project in the terminal by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the project folder: `cd flow-playground-tutorials/tutorials/08-resource-compose`. 
+You will also need a local copy of the tutorials code, which you should have downloaded in the voting tutorial.  
+If not, please download the project in the terminal by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the project folder: `cd flow-playground-tutorials/tutorials/08-resource-compose`.  
 
-Here you will need to follow these steps for a great pizza: 
+As you can see, all logic is contained in only one contract, `BestPizzaPlace`. Let's break down the content of the contract into pieces: There is a resource interface called `Ingredient` which just contains a name, and then three resources which implement this interface: `Dough`, `Sauce` and `Topping`. They all contain additional data, but the unifying aspect is that they each have a name. Two [enumerations](https://developers.flow.com/cadence/language/enumerations) are used, `Spiciness` for the sauce, and `Grain` for the dough.  
+While the `Ingredient` resource interface specified which data implementing resources must contain, the other two resource interfaces in the contract, `AddTopping` and `ShowOrder` specify which function must be defined. As the `Pizza` resource implements them both, it defines the functions `addTopping`, which takes a `Topping` resource, and `showOrder`, which returns the `Order` struct.  
+As only the cook (aka the AuthAccount) should be allowed to add toppings, the capability for this action is declared as private by being linked in the first transaction to the private path.  
+But as the guest and everyone else is allowed to check the order, the resource type `ShowOrder` is linked in the same transaction to the public path, so that the `Order` struct can be accessed by everyone.  
+
+These are the steps you will need to follow in order to get a great pizza:  
 
 1. Deploy the project, which will add the Pizza, Dough, Sauce and Topping resource definitions to the emulator-account
 2. Create an account for the customer
@@ -33,7 +38,7 @@ This time, the emulator configuration file `flow.json`is already provided, so yo
 flow emulator
 ```
 
-Then, open another terminal window and deploy the project: 
+Then, open another terminal window and deploy the project, which is composed of just one contract: 
 ```console
 flow project deploy
 ```
@@ -180,7 +185,7 @@ pub contract BestPizzaPlace {
         }
 
         /// showOrder allows to view the order by returning an Order struct,
-        /// thereby obviation the need for moving the Pizza resource
+        /// thereby obviates the need for moving the Pizza resource
         pub fun showOrder(): Order {
             let toppingNames: [String] = []
             //iteration is a bit special because of https://github.com/onflow/cadence/issues/704
@@ -237,7 +242,7 @@ pub contract BestPizzaPlace {
 }
 ```
 
-Some important things to notice in the BestPizzaPlace contract:
+Repeating and adding to the remarks above, please take notice of these critical aspects of the BestPizzaPlace contract:
 
 1. The `destroy()` function of the Pizza resource calls `destroy()` on all contained resources
 2. The `Order` struct which will be used to display the Pizza ingredients
@@ -247,7 +252,7 @@ But let's go on with the next step.
 
 ## Create a customer account
 
-Please enter this command: 
+Please enter this command:  
 
 ```console
 flow accounts create
@@ -257,9 +262,9 @@ Please choose the name 'customer' and then the option *Local Emulator*.
 
 ## Prepare the Pizza
 
-This will create a Pizza with Sauce and store it in the emulator-account.
-Also, the aforementioned public and private capability paths are published.
-This is the content of the transaction:
+This will create a Pizza with Sauce and store it in the emulator-account.  
+Also, the aforementioned public and private capability paths are published.  
+This is the content of the transaction:  
 
 ```cadence:title=tx01_PreparePizza.cdc
 import BestPizzaPlace from 0xf8d6e0586b0a20c7
@@ -276,9 +281,9 @@ transaction {
 
         let pizza <- BestPizzaPlace.createPizza(name: "Bufalina", dough: <-dough, sauce: <-sauce)
 
-        /// Store the pizza
+        // Store the pizza
         acct.save<@BestPizzaPlace.Pizza>(<-pizza, to: BestPizzaPlace.PizzaStoragePath)
-        /// Link capability references
+        // Link capability references
         acct.link<&AnyResource{BestPizzaPlace.AddTopping}>(BestPizzaPlace.PizzaAddToppingPrivatePath, target: BestPizzaPlace.PizzaStoragePath)
         acct.link<&AnyResource{BestPizzaPlace.ShowOrder}>(BestPizzaPlace.PizzaShowOrderPublicPath, target: BestPizzaPlace.PizzaStoragePath)
 
@@ -287,7 +292,7 @@ transaction {
     }
 
     post {
-        /// Check that the capabilities were created correctly
+        // Check that the capabilities were created correctly
        self.authAccount.getCapability<&AnyResource{BestPizzaPlace.AddTopping}>(BestPizzaPlace.PizzaAddToppingPrivatePath)
        .check():
          "Pizza AddTopping Reference was not created correctly"
@@ -299,7 +304,7 @@ transaction {
 }
 ````
 
-In order to execute it, run:
+In order to execute it, run:  
 
 ```console
 flow transactions send transactions/tx01_PreparePizza.cdc --signer emulator-account
@@ -307,10 +312,10 @@ flow transactions send transactions/tx01_PreparePizza.cdc --signer emulator-acco
 
 ## Add Toppings
 
-Notice that only the emulator-account can add toppings, as he is the one who executed the previous transaction.
-If the customer tries to add toppings, the transaction will fail.
+Notice that only the emulator-account can add toppings, as he is the one who executed the previous transaction.  
+If the customer tries to add toppings, the transaction will fail.  
 
-This is the transaction content:
+This is the transaction content:  
 
 ```cadence:title=tx02_AddToppings.cdc
 import BestPizzaPlace from 0xf8d6e0586b0a20c7
@@ -330,7 +335,7 @@ transaction {
         let topping2 <- BestPizzaPlace.createTopping(name: "Basil", addBeforeBaking: false)
 
         self.addToppingRef.addTopping(topping: <-topping1)
-        /// Baking happening in between ;-)
+        // Baking happening in between ;-)
         self.addToppingRef.addTopping(topping: <-topping2)
 
         log("Toppings added!")

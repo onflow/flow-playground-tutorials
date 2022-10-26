@@ -3,37 +3,72 @@ title: 9. Voting Contract
 ---
 
 With the advent of blockchain technology and smart contracts,
-it has become popular to try to create decentralized voting mechanisms that allow large groups of users to vote completely on chain.
-This tutorial will provide a trivial example for how this might be achieved by using a resource-oriented programming model.
-Two contracts will allow users to vote on multiple proposals while their voting power is determined by the balance of certain tokens. 
-These so called governance tokens track the user account balance over time, thus enabling insight into the balance just before the creation of a proposal. 
+it has become popular to try to create decentralized voting mechanisms
+that allow large groups of users to vote completely on chain.
+This tutorial will provide a trivial example for how this might
+be achieved by using a resource-oriented programming model.
+Two contracts will allow users to vote on multiple proposals
+while their voting power is determined by the balance of certain tokens. 
+These so called governance tokens track the user account balance over time,
+thus enabling insight into the balance just before the creation of a proposal. 
+
 An administration contract serves for the creation of proposals and provides the ballots.  
 
-Other than in the previous tutorials, this time we will work with a local blockchain on your computer.  
+The previous tutorials utilized the Flow Playground, which is a great place
+to test out small projects and pieces of code in Cadence, but not quite sufficient
+for production-level development.
 
-This can be achieved by using the [Flow CLI](https://developers.flow.com/tools/flow-cli/index), which allows us to run our code on a local blockchain emulator. The emulator comes bundled with the `Flow CLI`. The `Flow CLI` serves for managing the emulator and all files used in the interaction with the blockchain: Smart contracts, transactions and script files. It also allows you to generate an initial project configuration file, and to create accounts or even generate a default app.  
-Furthermore, the Flow CLI also allows you to query the local blockchain, testnet and mainnet for various information regarding e.g. the network status, or different entities.  
+For this tutorial, we will be using the [Flow Emulator](https://github.com/onflow/flow-emulator),
+is a local version of the Flow blockchain that you run on your computer.  
+
+This can be achieved by using the [Flow Command Line Interface](https://developers.flow.com/tools/flow-cli/index),
+(otherwise known as the Flow CLI) which allows us to run our code on the local blockchain emulator.
+
+The `Flow CLI` serves for managing the emulator and all files used
+in the interaction with the blockchain: Smart contracts, transactions and script files.
+It also allows you to generate an initial project configuration file,
+and to create accounts or even generate a default app.  
+Furthermore, the Flow CLI also allows you to query the local blockchain,
+testnet and mainnet for various information regarding e.g. the network status, or different entities.
+
+This tutorial also assumes that you are somewhat familiar
+with the [Flow Fungible Token standard](https://github.com/onflow/flow-ft).
 
 ---
-Let's focus on the procedure now.  
 We'll take you through the following steps to get comfortable with the voting contracts and the transactions:  
 
-1. Deploy the contracts to the local blockchain emulator
-2. Create two user accounts
-3. Create voter accounts for these users
-4. Mint tokens to these accounts
-5. Create proposals for users to vote on
-6. Create `Ballot` resources for both voters
-7. Record and cast votes in the central voting contract
-8. Read the results of the vote
+1. Setup your CLI and environment
+2. Learn about the Voting Contracts
+3. Deploy the contracts to the local blockchain emulator
+4. Create two user accounts
+5. Create voter accounts for these users
+6. Mint tokens to these accounts
+7. Create proposals for users to vote on
+8. Create `Ballot` resources for both voters
+9. Record and cast votes in the central voting contract
+10. Read the results of the vote
 
 ## Setup the environment
 
-Please follow [this link](https://developers.flow.com/tools/flow-cli/install) for instructions on how to install it on your computer. You should now be able to call it by simply entering `flow`, which will show you a list with all possible commands.
-The CLI also contains the [Flow Emulator](https://developers.flow.com/tools/emulator/index), a gRPC server that implements the Flow Access API. Please take a look at the [Flow CLI subsection](https://developers.flow.com/tools/flow-cli/start-emulator) for a brief overview, more details are covered in the [ReadMe](https://github.com/onflow/flow-emulator/#readme).
+Please follow [this link](https://developers.flow.com/tools/flow-cli/install)
+for instructions on how to install the Flow CLI on your computer.
+You should now be able to invoke the CLI by simply entering `flow`,
+which will show you a list with all possible commands.
 
-Once installed, please download the project in the terminal by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the project folder: `cd tutorials/08-voting`.  
-One thing we deliberately didn't include in the repository is the project configuration, which is contained in a file called `flow.json`. It lists the various components involved in the deployment of your project on the blockchain: Smart contracts, user accounts, and the different network URLs. You can read more about it [in the documentation](https://developers.flow.com/tools/flow-cli/configuration).  
+The CLI also contains the [Flow Emulator](https://developers.flow.com/tools/emulator/index),
+a gRPC server that implements the [Flow Access API](https://developers.flow.com/nodes/access-api).
+Please take a look at the [Flow CLI subsection](https://developers.flow.com/tools/flow-cli/start-emulator)
+for a brief overview, more details are covered in the [ReadMe](https://github.com/onflow/flow-emulator/#readme).
+
+Once installed, please download the project in the terminal
+by executing `git clone git@github.com:onflow/flow-playground-tutorials.git`,
+and then go to the project folder: `cd tutorials/08-voting`.
+
+One thing we deliberately didn't include in the repository is the project configuration,
+which is contained in a file called `flow.json`. It lists the various components involved
+in the deployment of your project on the blockchain: Smart contracts, user accounts,
+and the different network URLs. You can read more about it
+[in the CLI configuration documentation](https://developers.flow.com/tools/flow-cli/configuration).  
 
 We can generate an initial `flow.json` configuration file by executing this command inside the project folder:
 
@@ -41,7 +76,14 @@ We can generate an initial `flow.json` configuration file by executing this comm
 flow init
 ```
 
-At the moment, it only contains the default networks and a default admin user account. Most importantly, it is still missing information about the smart contracts that need to be deployed on the blockchain emulator. For this, we need to add two sections, `contracts` and `deployments`. The first one simply lists the relative paths to all the contracts that you want to deploy, the latter one defines which contracts you want to deploy to which accounts on which networks. Let's edit the configuration and add both the `contracts` and the `deployments` section, laying the ground for deployment to the local emulator:
+At the moment, it only contains the default networks and a default admin user account.
+Most importantly, it is still missing information about the smart contracts that need
+to be deployed on the blockchain emulator. For this, we need to add two sections,
+`contracts` and `deployments`. The first one simply lists the relative paths
+to all the contracts that you want to deploy, the latter one defines which contracts
+you want to deploy to which accounts on which networks. Let's edit the configuration
+and add both the `contracts` and the `deployments` section,
+laying the ground for deployment to the local emulator:
 
 ```json:title=flow.json
 {
@@ -66,7 +108,7 @@ At the moment, it only contains the default networks and a default admin user ac
 
 ## Run the emulator
 
-Once the configuration is saved, you can start the emulator, a gRPC server that implements the Flow Access API and so provides you with a local blockchain:
+Once the configuration is saved, you can start the Flow emulator with this command:
 
 ```console
 flow emulator
@@ -74,19 +116,60 @@ flow emulator
 
 ## Deploy the project
 
-Open another terminal window (check that you remain in the project folder) and deploy the project. This relies on the configuration file, which should now contain information about all three smart contracts as shown in the Setup section above.
+Open another terminal window (check that you remain in the project folder)
+and deploy the project. This relies on the configuration file, which should
+now contain information about all three smart contracts as shown in the Setup section above.
 
 ```console
 flow project deploy
 ```
 
-All three contracts should be deployed now to the local blockchain.  
+All three contracts should be deployed now to the local blockchain:
 
-`FungibleToken` is a Cadence standard, while `VotingTutorialGovernanceToken` and `VotingTutorialAdministration` are specific to this tutorial. A good definition of fungible tokens is given in the [Fungible Tokens tutorial](https://developers.flow.com/cadence/tutorial/06-fungible-tokens): "Some of the most popular contract classes on blockchains today are fungible tokens. These contracts create homogeneous tokens that can be transferred to other users and spent as currency (e.g., ERC-20 on Ethereum)."  
-Furthermore, the [Github repository](https://github.com/onflow/flow-ft) specifies: "The standard consists of a contract interface called FungibleToken that requires implementing contracts to define a Vault resource that represents the tokens that an account owns. Each account that owns tokens will have a Vault stored in its account storage. Users call functions on each other's Vaults to send and receive tokens."  
-`VotingTutorialGovernanceToken` is an implementation of the Fungible Token standard and needed in order to vote, the voter account's vault balance determines the weight of the vote. Its specialty is that it stores a history of voting weight that is updated on each transfer.  
-The voting weight is saved in this struct, which stores the balance and the time:
-```cadence:title=VotingTutorialGovernanceToken.cdc
+* `FungibleToken`
+* `VotingTutorialGovernanceToken`
+* `VotingTutorialAdministration`
+
+We'll explore what each of these contracts are for.
+
+### FungibleToken
+
+`FungibleToken` is a Cadence standard. A good definition of fungible tokens
+is given in the [Fungible Tokens tutorial](https://developers.flow.com/cadence/tutorial/06-fungible-tokens):
+"Some of the most popular contract classes on blockchains today are fungible tokens.
+These contracts create homogeneous tokens that can be transferred
+to other users and spent as currency (e.g., ERC-20 on Ethereum)."
+
+The fungible token defined in the tutorial was a simple example
+that is only meant for education purposes. Any projects that actually want
+to create a fungible token need to implement the code defined in the `FungibleToken`
+contract interface that we use here.
+
+The [Flow Fungible Token Github repository](https://github.com/onflow/flow-ft)
+specifies: "The standard consists of a contract interface called FungibleToken
+that requires implementing contracts to define a Vault resource
+that represents the tokens that an account owns.
+Each account that owns tokens will have a Vault stored in its account storage.
+Users call functions on each other's Vaults to send and receive tokens."
+
+You may think that fungible tokens are only useful for representing a currency,
+but we encourage you to realize that with Cadence, we have so much more flexibility
+with what we can build with the tools at our disposal.
+
+This tutorial shows just one example of something unique that can be done with fungible tokens.
+There are many ways that fungible tokens can be used that haven't even been discovered yet.
+
+### Voting Tutorial Governance Token
+
+`VotingTutorialGovernanceToken.cdc` is an implementation of the Fungible Token standard
+and is needed in order to vote. If a user wants to vote, they are required to store
+a governance token vault in their storage. The voter account's vault balance
+determines the weight of their vote; The more tokens they have, the more their vote is worth.
+
+The unique and practical part of this token is that it stores a history
+of voting weight based on the Flow timestamp that is updated on each transfer.
+
+```cadence
 pub struct VotingWeightData {
     pub let vaultBalance: UFix64
     pub let blockTs: UFix64
@@ -97,17 +180,48 @@ pub struct VotingWeightData {
     }
 }
 ```
-The voting weights over time are stored in an array specified by the `VotingWeight` resource interface.
-The `vaultId` is generated and unique and used by the `VotingTutorialAdministration` contract to prohibit voting more than once.  
-```cadence:title=VotingTutorialGovernanceToken.cdc
+
+The voting weight is saved in this struct, which stores the balance and the timestamp,
+which is a UNIX representation of a specific moment in time.
+See [the timestamp documentation](https://developers.flow.com/cadence/measuring-time#time-on-the-flow-blockchain) 
+for more information about how to use the timestamp.
+
+In addition to the regular `balance` field, each Vault also stores a `vaultID`
+field and a `votingWeightDataSnapshot`, which help identify the vault and its weights over time.
+The `vaultId` is generated and unique and used by the `VotingTutorialAdministration` contract
+to prohibit voting more than once.
+
+```cadence
+pub resource Vault: FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, VotingWeight {
+
+        /// Keeps track of the total balance of the account's tokens
+        pub var balance: UFix64
+        /// Add an id for the vault for ease in checking whether vote has already been cast
+        pub let vaultId: UInt64
+        /// Keeps track of user's voting power
+        pub let votingWeightDataSnapshot: [VotingWeightData]
+}
+```
+
+The `VotingWeight` resource interface is used to create a public link to the vault
+so that its ID and weight history can be read by anyone in the network.
+
+```cadence
 pub resource interface VotingWeight {
     pub let vaultId: UInt64
     pub let votingWeightDataSnapshot: [VotingWeightData]
 }
 ```
-The resource `Vault` is implementing this interface, as well as `Provider`, `Receiver`, and `Balance`, which are specified in `FungibleToken`. The latter three allow for the basic token functionality of withdrawing and receiving tokens as well as reading the current balance.  
-Lastly, there is a resource called `VaultMinter`, which provides the admin with a function to mint tokens to a receiver, 
-given as a capability of the needed type - `&AnyResource{Receiver}` can be any resource that implements the Receiver interface:  
+
+The resource `Vault` implements this interface as well as `Provider`, `Receiver`, and `Balance`,
+which are specified in `FungibleToken`. The latter three allow for the basic token
+functionality of withdrawing and receiving tokens as well as reading the current balance.
+ 
+Lastly, there is a resource called `VaultMinter`, which provides the admin
+with a function to mint tokens to `FungibleToken` receiver capability.
+This is given as a capability of the needed type; `&AnyResource{Receiver}` can be
+any resource that implements the Receiver interface.
+
 ```cadence:title=VotingTutorialGovernanceToken.cdc
 pub fun mintTokens(amount: UFix64, recipient: Capability<&AnyResource{FungibleToken.Receiver}>) {
     let recipientRef = recipient.borrow()
@@ -120,7 +234,15 @@ pub fun mintTokens(amount: UFix64, recipient: Capability<&AnyResource{FungibleTo
 }
 ```
 
-This is the total code for `VotingTutorialGovernanceToken`:  
+It is important to specify that the capability can be any resource
+that implements the receiver interface because it gives users a lot more flexibility
+for how they want to manage their accounts. A user could replace their regular
+receiver with one that forwards the tokens to a different account that they have decided
+to delegate their voting power to, or it could split the tokens into different vaults
+in order to split up their votes in interesting ways. These are just a couple examples,
+but the capability and resource model of Cadence is what makes this possible!
+
+Here is the complete code for `VotingTutorialGovernanceToken`:  
 
 ```cadence:title=VotingTutorialGovernanceToken.cdc
 /*
@@ -294,7 +416,13 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
     }
 }
 ```
-`VotingTutorialAdministration` is used for administration of the whole voting process. It contains a struct `ProposalData` which is used to store the proposal as well as the total votes and a voter registry:
+
+### Voting Tutorial Administration
+
+`VotingTutorialAdministration.cdc` is used for administration of the whole voting process.
+It contains a struct `ProposalData` which is used to store a proposal
+as well as the total votes and a voter registry:
+
 ```cadence:title=VotingTutorialAdministration.cdc
 pub struct ProposalData {
     /// The name of the proposal
@@ -325,13 +453,24 @@ pub struct ProposalData {
 }
 ```
 
-Then there is a `Votable` resource interface with the `vote` function which is implemented by the `Ballot` resource.  
-A user can request a `Ballot`, and then vote for a proposal, effectively tallying the vote weight in this contract.
-Using a resource type is logical for this application, because if a user wants to delegate their vote, they can send that `Ballot` to another account.
-Lastly, an `Administrator` resource allows to add proposals.
-The contract function `issueBallot` gives a ballot to a `VotingTutorialGovernanceToken.Vault` capability.  
+There is also a `Votable` resource interface with the `vote` function
+which is implemented by the `Ballot` resource.
 
-This is the whole content of the contract:
+{TODO: Explain why Votable is a resource interface and provide a cadence snippet of those and the ballot resource}
+
+A user can request a `Ballot`, and then vote for a proposal,
+effectively tallying the vote weight in this contract.
+
+Using a resource type is logical for this application, because if a user wants to delegate their vote, they can send that `Ballot` to another account.
+
+Lastly, an `Administrator` resource allows to add proposals.
+
+{TODO: Include Administrator example here and some more explanation}
+
+The public contract function `issueBallot` gives a ballot
+to a `VotingTutorialGovernanceToken.Vault` capability.  
+
+Here is the complete Admin contract:
 
 ```cadence:title=VotingTutorialAdministration.cdc
 /*
@@ -484,11 +623,15 @@ pub contract VotingTutorialAdministration {
 }
 ```
 
+Now that we've covered the contracts, lets set up some accounts and a proposal for them to vote on.
+
 ## Create two extra accounts ('acct2', 'acct3')
 
-In the rest of this tutorial, we will use transactions and scripts which interact with the deployed contracts.  
-The transactions which are concerned with the expression of the voter will need to be authorized by the voters themselves.  
-Therefore we are going to create two voter accounts. In a first step, we are creating the user accounts.  
+In the rest of this tutorial, we will use transactions and scripts
+which interact with the deployed contracts.
+
+Transactions need users to authorize them, so we are going to create two new voter accounts.
+In a first step, we are creating the user accounts.  
 
 The following command creates a user account, you need to execute it twice, once for an account named 'acct2', and again for 'acct3'.
 When asked, please choose the option *Local Emulator*. Enter 'y' for acceptance at the end:  
@@ -497,10 +640,13 @@ When asked, please choose the option *Local Emulator*. Enter 'y' for acceptance 
 flow accounts create
 ```
 
-## Create the voter accounts
+## Setup the voter accounts
 
-The next transaction serves to create the governance token vault for a voter, effectively giving the user the general ability to vote with governance tokens.  
-The vault will later be used in order to get a ballot from the administration contract, which can then be used to vote on proposals which the administrator created.  
+Now, we will sign transactions with our newly created accounts
+to create the governance token vault for the voters, effectively giving
+the users the general ability to vote with governance tokens. 
+
+The vault will later be used in order to get a ballot from the administration contract, which can then be used to vote on proposals which the administrator created.
 
 ```cadence:title=tx_01_SetupAccount.cdc
 import FungibleToken from 0xf8d6e0586b0a20c7
@@ -537,6 +683,15 @@ transaction {
 }
 ```
 
+The transactions will need to be
+[authorized by an account](https://developers.flow.com/tools/flow-cli/send-transactions),
+which means that the users have to set their addresses
+as the authorizers for a transaction and sign the transaction with their accounts' private keys.
+
+In the playground, this was simply accomplished by clicking
+on the icon for the account you wanted to authorize with, but with the CLI,
+you have to be more explicit since you are now controlling the private keys.
+
 Please execute this transaction for both users:
 
 ```console
@@ -544,9 +699,13 @@ flow transactions send transactions/tx_01_SetupAccount.cdc --signer acct2
 flow transactions send transactions/tx_01_SetupAccount.cdc --signer acct3
 ```
 
+{TODO: Explain what flow transactions send is doing and what the arguments mean. link to the docs where applicable}
+
 ## Mint tokens to those two accounts
 
-Now that both user accounts have empty governance token vaults and a receiver capability which allows them to receive tokens,  
+Now that both user accounts have empty governance token vaults
+and a receiver capability which allows them to receive tokens,  
+
 we can now mint tokens to the accounts via this transaction, which uses the capabilities as arguments to the `mintTokens` function:
 
 ```cadence:title=tx_02_MintTokens.cdc
@@ -594,6 +753,8 @@ Please execute this transaction as the administrator, indicating both the receiv
 ```console
 flow transactions send transactions/tx_02_MintTokens.cdc "0x01cf0e2f2f715450" "0x179b6b1cb6755e31" 30.0 150.0 --signer emulator-account
 ```
+
+{TODO: Explain how we are passing arguments to transactions via the CLI}
 
 ## Create the proposals for voting
 
@@ -712,7 +873,7 @@ flow transactions send transactions/tx_05_SelectAndCastVotes.cdc "1" "0" --signe
 
 ## Check balances
 
-If you want to have an insight into the last recorded balance and timestamp of the balance for the two user accounts, you can use the script `GetVotingWeight.cdc`, indication both addresses:
+If you want to have an insight into the last recorded balance and timestamp of the balance for the two user accounts, you can use the script `GetVotingWeight.cdc`, providing both addresses as arguments:
 
 ```console
 flow scripts execute scripts/GetVotingWeight.cdc "0x01cf0e2f2f715450" "0x179b6b1cb6755e31"
@@ -729,4 +890,4 @@ flow scripts execute scripts/GetProposalsData.cdc
 ## Summary
 
 We hope that this was a good introduction to the local blockchain emulator and the `Flow CLI` in general.  
-You should feel comfortable now with the local tools and the configuration.  
+You should feel comfortable now with basic usage of the local tools and configuration.  

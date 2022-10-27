@@ -11,7 +11,8 @@ transaction {
     let proposals: {Int : VotingTutorialAdministration.ProposalData}
 
     prepare(admin: AuthAccount) {
-        self.adminRef = admin.borrow<&VotingTutorialAdministration.Administrator>(from: VotingTutorialAdministration.adminStoragePath)!
+        self.adminRef = admin.borrow<&VotingTutorialAdministration.Administrator>
+            (from: VotingTutorialAdministration.adminStoragePath)!
 
         let ts = getCurrentBlock().timestamp
         let food = ["Pizza", "Spaghetti", "Pancake"]

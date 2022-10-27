@@ -159,7 +159,9 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
         self.account.save(<-vault, to: self.VaultStoragePath)
 
         /// Create a public capability to the stored Vault that exposes VotingWeight
-        self.account.link<&VotingTutorialGovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, VotingTutorialGovernanceToken.VotingWeight}>(VotingTutorialGovernanceToken.VaultPublicPath, target: VotingTutorialGovernanceToken.VaultStoragePath)
+        self.account.link<&VotingTutorialGovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, 
+            FungibleToken.Balance, VotingTutorialGovernanceToken.VotingWeight}>
+            (VotingTutorialGovernanceToken.VaultPublicPath, target: VotingTutorialGovernanceToken.VaultStoragePath)
 
         /// Create a new Minter resource and store it in account storage
         self.account.save(<-create VaultMinter(), to: self.MinterStoragePath)
@@ -168,3 +170,4 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
         emit TokensInitialized(initialSupply: self.totalSupply)
     }
 }
+ 

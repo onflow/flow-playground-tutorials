@@ -19,7 +19,9 @@ transaction {
     log("Empty Vault stored")
 
     // Link capability reference
-    acct.link<&VotingTutorialGovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, VotingTutorialGovernanceToken.VotingWeight}>(VotingTutorialGovernanceToken.VaultPublicPath, target: VotingTutorialGovernanceToken.VaultStoragePath)
+    acct.link<&VotingTutorialGovernanceToken.Vault{FungibleToken.Provider, 
+      FungibleToken.Receiver, FungibleToken.Balance, VotingTutorialGovernanceToken.VotingWeight}>
+      (VotingTutorialGovernanceToken.VaultPublicPath, target: VotingTutorialGovernanceToken.VaultStoragePath)
 
     self.account = acct
     log("VotingTutorialGovernanceToken Vault reference created")
@@ -27,8 +29,9 @@ transaction {
 
    post {
         // Check that the capability was created correctly
-       getAccount(self.account.address).getCapability<&VotingTutorialGovernanceToken.Vault{FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, VotingTutorialGovernanceToken.VotingWeight}>(VotingTutorialGovernanceToken.VaultPublicPath)
-       .check():
-         "VotingTutorialGovernanceToken Vault Reference was not created correctly"
+        getAccount(self.account.address).getCapability<&VotingTutorialGovernanceToken.Vault{FungibleToken.Provider, 
+            FungibleToken.Receiver, FungibleToken.Balance, VotingTutorialGovernanceToken.VotingWeight}>
+            (VotingTutorialGovernanceToken.VaultPublicPath)
+                .check(): "VotingTutorialGovernanceToken Vault Reference was not created correctly"
     }
 }

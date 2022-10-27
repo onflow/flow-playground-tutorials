@@ -15,16 +15,19 @@ transaction (recipient1: Address, recipient2: Address, amountRecipient1: UFix64,
 
     prepare(acct: AuthAccount) {
         // Borrow a reference to the stored, private minter resource
-        self.mintingRef = acct.borrow<&VotingTutorialGovernanceToken.VaultMinter>(from: VotingTutorialGovernanceToken.MinterStoragePath)
-            ?? panic("Could not borrow a reference to the minter")
+        self.mintingRef = acct.borrow<&VotingTutorialGovernanceToken.VaultMinter>
+            (from: VotingTutorialGovernanceToken.MinterStoragePath) ?? 
+            panic("Could not borrow a reference to the minter")
 
         // Get the account objects
         let recipient1Account = getAccount(recipient1)
         let recipient2Account = getAccount(recipient2)
 
         // Get their public receiver capabilities
-        self.receiver1 = recipient1Account.getCapability<&AnyResource{FungibleToken.Receiver}>(VotingTutorialGovernanceToken.VaultPublicPath)
-        self.receiver2 = recipient2Account.getCapability<&AnyResource{FungibleToken.Receiver}>(VotingTutorialGovernanceToken.VaultPublicPath)
+        self.receiver1 = recipient1Account.getCapability<&AnyResource{FungibleToken.Receiver}>
+            (VotingTutorialGovernanceToken.VaultPublicPath)
+        self.receiver2 = recipient2Account.getCapability<&AnyResource{FungibleToken.Receiver}>
+            (VotingTutorialGovernanceToken.VaultPublicPath)
     }
 
     execute {

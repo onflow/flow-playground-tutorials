@@ -63,10 +63,12 @@ pub contract VotingTutorialAdministration {
         pub fun vote(proposalId: Int, optionId: Int){
             pre {
                 VotingTutorialAdministration.proposals[proposalId] != nil: "Cannot vote for a proposal that doesn't exist"
-                VotingTutorialAdministration.proposals[proposalId]!.voters[self.vaultId] == nil: "Cannot cast vote again using same Governance Token Vault"
+                VotingTutorialAdministration.proposals[proposalId]!.voters[self.vaultId] == nil: 
+                    "Cannot cast vote again using same Governance Token Vault"
                 optionId < VotingTutorialAdministration.proposals[proposalId]!.options.length: "This option does not exist"
                 self.votingWeightDataSnapshot.length > 0: "Can only vote if balance exists"
-                self.votingWeightDataSnapshot[0].blockTs < VotingTutorialAdministration.proposals[proposalId]!.blockTs: "Can only vote if balance was recorded before proposal was created"
+                self.votingWeightDataSnapshot[0].blockTs < VotingTutorialAdministration.proposals[proposalId]!.blockTs: 
+                    "Can only vote if balance was recorded before proposal was created"
             }
         }
     }
@@ -131,7 +133,8 @@ pub contract VotingTutorialAdministration {
     }
 
     /// issueBallot creates a new Ballot
-    pub fun issueBallot(recipientCap: Capability<&VotingTutorialGovernanceToken.Vault{VotingTutorialGovernanceToken.VotingWeight}>): @Ballot {
+    pub fun issueBallot(recipientCap: 
+        Capability<&VotingTutorialGovernanceToken.Vault{VotingTutorialGovernanceToken.VotingWeight}>): @Ballot {
         return <-create Ballot(recipientCap: recipientCap)
     }
 

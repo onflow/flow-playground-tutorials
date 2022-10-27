@@ -332,7 +332,7 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
             self.votingWeightDataSnapshot = []
         }
 
-        /// withdraw takes a fixed point amount as an argument
+        /// withdraw takes a fixed point amount as a parameter
         /// and withdraws that amount from the Vault.
         ///
         /// It creates a new temporary Vault that is used to hold
@@ -346,7 +346,7 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
             return <-create Vault(balance: amount)
         }
 
-        /// deposit takes a Vault object as an argument and adds
+        /// deposit takes a Vault object as a parameter and adds
         /// its balance to the balance of the owners Vault.
         ///
         /// It is allowed to destroy the sent Vault because the Vault
@@ -481,8 +481,11 @@ Lastly, an `Administrator` resource allows to add proposals.
 
 {TODO: Include Administrator example here and some more explanation}
 
-The public contract function `issueBallot` gives a ballot
-to a `VotingTutorialGovernanceToken.Vault` capability.  
+The public contract function `issueBallot` takes a capability as a parameter and uses it 
+to create a new ballot based on the voter's voting weight data. 
+Therefore, the function signature specifies the capability as of type `Vault`, which 
+needs to implement `VotingWeight` - both are defined in `VotingTutorialGovernanceToken`.
+This guarantees that both a vault id and the voting weight history are present.  
 
 Here is the complete Admin contract:
 

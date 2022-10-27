@@ -148,7 +148,8 @@ pub contract BestPizzaPlace {
               toppingNames.append(toppingRef.name)
               i = i + 1
             }
-            return Order(pizzaName: self.name, dough: self.dough.name, timeToBake: self.dough.timeToBake, sauceType: self.sauce.name, spiciness: self.sauce.getSpiciness(), toppings: toppingNames)
+            return Order(pizzaName: self.name, dough: self.dough.name, timeToBake: self.dough.timeToBake, 
+                sauceType: self.sauce.name, spiciness: self.sauce.getSpiciness(), toppings: toppingNames)
         }
 
         /// destroy calls the destroy function on all contained resources

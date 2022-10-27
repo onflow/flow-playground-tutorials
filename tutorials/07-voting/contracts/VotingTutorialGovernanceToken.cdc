@@ -74,7 +74,7 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
             self.votingWeightDataSnapshot = []
         }
 
-        /// withdraw takes a fixed point amount as an argument
+        /// withdraw takes a fixed point amount as a parameter
         /// and withdraws that amount from the Vault.
         ///
         /// It creates a new temporary Vault that is used to hold
@@ -88,7 +88,7 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
             return <-create Vault(balance: amount)
         }
 
-        /// deposit takes a Vault object as an argument and adds
+        /// deposit takes a Vault object as a parameter and adds
         /// its balance to the balance of the owners Vault.
         ///
         /// It is allowed to destroy the sent Vault because the Vault

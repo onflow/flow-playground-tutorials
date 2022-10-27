@@ -30,16 +30,67 @@ If not, please download the project in the terminal by executing
 `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the 
 project folder: `cd flow-playground-tutorials/tutorials/08-resource-compose`.  
 
-As you can see, all logic is contained in only one contract, `BestPizzaPlace`. 
+As you can see, all logic is contained in only one contract, `BestPizzaPlace.cdc`. 
 Let's break down the content of the contract into pieces: There is a resource interface 
-called `Ingredient` which just contains a name, and then three resources which implement 
-this interface: `Dough`, `Sauce` and `Topping`. They all contain additional data, 
-but the unifying aspect is that they each have a name. 
+called `Ingredient`:
+
+```cadence
+/// Ingredient
+///
+/// This resource interface simply says that something is an ingredient with a name
+pub resource interface Ingredient {
+    pub name: String
+}
+```
+
+It just contains a name, and then three resources implement this interface: 
+`Dough`, `Sauce` and `Topping`. They all contain additional data, but the unifying aspect 
+is that they each have a name.  
+
 Two [enumerations](https://developers.flow.com/cadence/language/enumerations) are used, 
-`Spiciness` for the sauce, and `Grain` for the dough.  
+`Spiciness` for the sauce, and `Grain` for the dough:  
+
+```cadence
+/// Used for the sauce
+pub enum Spiciness: UInt8 {
+    pub case mild
+    pub case medium
+    pub case hot
+}
+```
+
+```cadence
+/// Used for the Dough
+pub enum Grain: UInt8 {
+    pub case wheat
+    pub case rye
+    pub case spelt
+}
+```
+
 While the `Ingredient` resource interface specified which data implementing resources must 
 contain, the other two resource interfaces in the contract, `AddTopping` and `ShowOrder`, 
-specify which function must be defined. As the `Pizza` resource implements them both, 
+specify which function must be defined: 
+
+```cadence
+/// AddTopping
+///
+/// This resource interface signifies that you can add a topping
+pub resource interface AddTopping {
+    pub fun addTopping(topping: @Topping)
+}
+```
+
+```cadence
+/// ShowOrder
+///
+/// This resource interface signifies that you can show the order
+pub resource interface ShowOrder {
+    pub fun showOrder(): Order
+}
+```
+
+As the `Pizza` resource implements them both, 
 it defines the functions `addTopping`, which takes a `Topping` resource, and `showOrder`, 
 which returns the `Order` struct.  
 As only the cook (aka the AuthAccount) should be allowed to add toppings, 
@@ -47,11 +98,37 @@ the capability for this action is declared as private by being linked
 in the first transaction to the private path.  
 But as the guest and everyone else is allowed to check the order, 
 the resource type `ShowOrder` is linked in the same transaction to the public path, 
-so that the `Order` struct can be accessed by everyone.  
+so that the `Order` struct can be accessed by everyone. This is modeled after the 
+[design pattern 'Script-Accessible report'](https://developers.flow.com/cadence/design-patterns#script-accessible-report). 
+This is the implementation of the `Order` struct:
+
+```cadence
+/// Order
+///
+// A struct used to inform about the pizza ingredients
+pub struct Order {
+    pub var pizzaName: String
+    pub var dough: String
+    pub var timeToBake: UInt
+    pub var sauceType: String
+    pub var spiciness: String
+    pub var toppings: [String]
+
+    /// Initializes the fields to the given arguments
+    init(pizzaName: String, dough: String, timeToBake: UInt, sauceType: String, spiciness: String, toppings: [String]) {
+        self.pizzaName = pizzaName
+        self.dough = dough
+        self.timeToBake = timeToBake
+        self.sauceType = sauceType
+        self.spiciness = spiciness
+        self.toppings = toppings
+    }
+}
+```
 
 These are the steps you will need to follow in order to get a great pizza:  
 
-1. Deploy the project, which will add the Pizza, Dough, Sauce and Topping resource definitions to the emulator-account
+1. Deploy the BestPizzaPlace contract, which will add the Pizza, Dough, Sauce and Topping resource definitions to the emulator-account
 2. Create an account for the customer
 3. Create a Pizza with Sauce and store it in the emulator-account
 4. Add multiple Toppings to the Pizza
@@ -59,19 +136,23 @@ These are the steps you will need to follow in order to get a great pizza:
 
 ## Preparation
 
+<Callout type="info">
 This time, the emulator configuration file `flow.json`is already provided, 
 so you can run the emulator right ahead: 
 ```console
 flow emulator
 ```
+</Callout>
 
+<Callout type="info">
 Then, open another terminal window and deploy the project, 
 which is composed of just one contract: 
 ```console
 flow project deploy
 ```
+</Callout>
 
-This will deploy the BestPizzaPlace contract:
+This will deploy the BestPizzaPlace contract, shown here completely:
 ```cadence:BestPizzaPlace.cdc
 /*
 *   This is an example on how to compose resources.
@@ -282,17 +363,23 @@ But let's go on with the next step.
 
 ## Create a customer account
 
-Please enter this command:  
+<Callout type="info">
+As already practiced in the [Voting Tutorial](https://developers.flow.com/cadence/tutorial/09-voting), 
+please enter this command for the creation of a new account:  
 
 ```console
 flow accounts create
 ```
 
 Please choose the name 'customer' and then the option *Local Emulator*.
+</Callout>
+
+This time, no further action for the account is required, as a normal account without any 
+vault in storage suffices.
 
 ## Prepare the Pizza
 
-This will create a Pizza with Sauce and store it in the emulator-account.  
+The next transaction will create a Pizza with Sauce and store it in the emulator-account.  
 Also, the aforementioned public and private capability paths are published.  
 This is the content of the transaction:  
 
@@ -336,11 +423,13 @@ transaction {
 }
 ````
 
-In order to execute it, run:  
+<Callout type="info">
+In order to execute it, please run:  
 
 ```console
 flow transactions send transactions/tx01_PreparePizza.cdc --signer emulator-account
 ```
+</Callout>
 
 ## Add Toppings
 
@@ -375,6 +464,7 @@ transaction {
 }
 ```
 
+<Callout type="info">
 Try to execute this transaction by calling:
 
 ```console
@@ -386,25 +476,30 @@ As you can see in the emulator window, this will result in the following error l
 ```console
 "Could not borrow reference for adding toppings, only the cook can add toppings."
 ```
+</Callout>
 
+<Callout type="info">
 So make sure to call it with the same account you were using for the first transaction:
 
 ```console
 flow transactions send transactions/tx02_AddToppings.cdc --signer emulator-account
 ```
+</Callout>
 
 ## Check the order
 
+<Callout type="info">
 Finally, the order can be inspected by everyone, 
 as a public capability was created in the first transaction:
 
 ```console
 flow scripts execute scripts/ShowOrder.cdc
 ```
+</Callout>
 ---
 
 The above is a simple example of composable resources. We saw that we need to take care of 
 calling `destroy()` on all contained resources, and that structs can be used to hand over 
-the content of a resource without moving the resource itself.
+the content of a resource without moving the resource itself.  
 We also saw how a private capability restricts access to a resource whereas 
 a public capability allows access for everyone.

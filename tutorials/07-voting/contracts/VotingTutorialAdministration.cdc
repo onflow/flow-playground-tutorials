@@ -115,7 +115,7 @@ pub contract VotingTutorialAdministration {
 
     /// Administrator
     ///
-    // The Administrator resource allows to add proposals
+    /// The Administrator resource allows to add proposals
     pub resource Administrator {
 
         /// addProposals initializes all the proposals for the voting

@@ -74,12 +74,14 @@ in the deployment of your project on the blockchain: Smart contracts, user accou
 and the different network URLs. You can read more about it
 [in the CLI configuration documentation](https://developers.flow.com/tools/flow-cli/configuration).  
 
+<Callout type="info">
 We can generate an initial `flow.json` configuration file by executing this command 
 inside the project folder:
 
 ```console
 flow init
 ```
+</Callout>
 
 At the moment, it only contains the default networks and a default admin user account.
 Most importantly, it is still missing information about the smart contracts that need
@@ -113,14 +115,17 @@ laying the ground for deployment to the local emulator:
 
 ## Run the emulator
 
+<Callout type="info">
 Once the configuration is saved, you can start the Flow emulator with this command:
 
 ```console
 flow emulator
 ```
+</Callout>
 
 ## Deploy the project
 
+<Callout type="info">
 Open another terminal window (check that you remain in the project folder)
 and deploy the project. This relies on the configuration file, which should
 now contain information about all three smart contracts as shown in the 
@@ -129,6 +134,7 @@ Setup section above.
 ```console
 flow project deploy
 ```
+</Callout>
 
 All three contracts should be deployed now to the local blockchain:
 
@@ -471,7 +477,7 @@ There is also a `Votable` resource interface with the fields `vaultId` and
 the `VotingTutorialGovernanceToken.VotingWeight` resource interface, whereas the 
 `vote` function serves cast a vote; its parameters are both the proposal id and 
 the chosen option id. As we are inside the function definition in an interface, 
-this is the place to do some preliminary checks.
+this is the place to check preconditions.
 
 ```cadence
 /// Votable
@@ -749,6 +755,7 @@ Transactions need users to authorize them, so we are going to create
 two new voter accounts.
 In a first step, we are creating the user accounts.  
 
+<Callout type="info">
 The following command creates a user account, you need to execute it twice, 
 once for an account named 'acct2', and again for 'acct3'.
 When asked, please choose the option *Local Emulator*. 
@@ -757,6 +764,7 @@ Enter 'y' for acceptance at the end:
 ```console
 flow accounts create
 ```
+</Callout>
 
 ## Setup the voter accounts
 
@@ -814,6 +822,7 @@ on the icon for the account you wanted to authorize with, but with the CLI,
 you have to be more explicit since you are now controlling the private keys.
 
 In order to execute transactions, you need to use the command [flow transactions send](https://developers.flow.com/tools/flow-cli/send-transactions).
+<Callout type="info">
 Please do this now for both users by using the `signer` flag and 
 indicating the account names:
 
@@ -821,6 +830,7 @@ indicating the account names:
 flow transactions send transactions/tx_01_SetupAccount.cdc --signer acct2
 flow transactions send transactions/tx_01_SetupAccount.cdc --signer acct3
 ```
+</Callout>
 
 ## Mint tokens to those two accounts
 
@@ -876,6 +886,7 @@ As you can see in the transaction code, it takes two account addresses and
 two token amounts as arguments. As described in the documentation referred above, you 
 need to indicate the arguments without any flags but in the right order.  
 
+<Callout type="info">
 Please execute this transaction now as the administrator, indicating both the receiving 
 account addresses (which usually do not differ in the local environment, but please 
 double check the `flow.json` file), and the token amounts (30.0 and 150.0 in this case):
@@ -883,6 +894,7 @@ double check the `flow.json` file), and the token amounts (30.0 and 150.0 in thi
 ```console
 flow transactions send transactions/tx_02_MintTokens.cdc "0x01cf0e2f2f715450" "0x179b6b1cb6755e31" 30.0 150.0 --signer emulator-account
 ```
+</Callout>
 
 ## Create the proposals for voting
 
@@ -927,11 +939,13 @@ transaction {
 }
 ```
 
+<Callout type="info">
 Please execute this transaction as the administrator:
 
 ```console
 flow transactions send transactions/tx_03_CreateNewProposals.cdc --signer emulator-account
 ```
+</Callout>
 
 Optionally - if you want to test the 'voting token balance timestamp < proposal timestamp' 
 requirement, call mint again but change the token amounts.
@@ -967,12 +981,14 @@ transaction () {
 }
 ```
 
+<Callout type="info">
 Please execute this transaction twice so that both users are able to vote:
 
 ```console
 flow transactions send transactions/tx_04_CreateNewBallot.cdc --signer acct2
 flow transactions send transactions/tx_04_CreateNewBallot.cdc --signer acct3
 ```
+</Callout>
 
 ## Cast vote
 
@@ -1000,6 +1016,7 @@ transaction (proposalId: Int, optionId: Int) {
 }
 ```
 
+<Callout type="info">
 Both the proposal and option id need to be indicated as in the following example, 
 counting from '0' upwards (in the first case for the first proposal and the third option, 
 in the second case for the second proposal and the first option):
@@ -1008,9 +1025,11 @@ in the second case for the second proposal and the first option):
 flow transactions send transactions/tx_05_SelectAndCastVotes.cdc "0" "2" --signer acct2
 flow transactions send transactions/tx_05_SelectAndCastVotes.cdc "1" "0" --signer acct3
 ```
+</Callout>
 
 ## Check balances
 
+<Callout type="info">
 If you want to have an insight into the last recorded balance and timestamp of the balance 
 for the two user accounts, you can use the script `GetVotingWeight.cdc`, providing both 
 addresses as arguments:
@@ -1018,14 +1037,17 @@ addresses as arguments:
 ```console
 flow scripts execute scripts/GetVotingWeight.cdc "0x01cf0e2f2f715450" "0x179b6b1cb6755e31"
 ```
+</Callout>
 
 ## Check proposal outcome
 
+<Callout type="info">
 Finally, in order to see the recorded proposals outcome, run the `GetProposalsData` script:
 
 ```console
 flow scripts execute scripts/GetProposalsData.cdc
 ```
+</Callout>
 
 ## Summary
 

@@ -233,7 +233,7 @@ with a function to mint tokens to a `FungibleToken` receiver capability.
 This is given as a capability of the needed type; `&AnyResource{Receiver}` can be
 any resource that implements the Receiver interface.
 
-```cadence:title=VotingTutorialGovernanceToken.cdc
+```cadence
 pub fun mintTokens(amount: UFix64, recipient: Capability<&AnyResource{FungibleToken.Receiver}>) {
     let recipientRef = recipient.borrow()
         ?? panic("Could not borrow a receiver reference to the vault")
@@ -436,7 +436,7 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
 It contains a struct `ProposalData` which is used to store a proposal
 as well as the total votes and a voter registry:
 
-```cadence:title=VotingTutorialAdministration.cdc
+```cadence
 pub struct ProposalData {
     /// The name of the proposal
     pub let name: String
@@ -466,10 +466,81 @@ pub struct ProposalData {
 }
 ```
 
-There is also a `Votable` resource interface with the `vote` function
-which is implemented by the `Ballot` resource.
+There is also a `Votable` resource interface with the fields `vaultId` and 
+`votingWeightDataSnapshot` and the `vote` function. The fields reflect those in 
+the `VotingTutorialGovernanceToken.VotingWeight` resource interface, whereas the 
+`vote` function serves cast a vote; its parameters are both the proposal id and 
+the chosen option id. As we are inside the function definition in an interface, 
+this is the place to do some preliminary checks.
 
-{TODO: Explain why Votable is a resource interface and provide a cadence snippet of those and the ballot resource}
+```cadence
+/// Votable
+///
+/// Interface which keeps track of voting weight history and allows to cast a vote
+///
+pub resource interface Votable {
+    pub vaultId: UInt64
+    pub votingWeightDataSnapshot: [VotingTutorialGovernanceToken.VotingWeightData]
+
+    /// Here only some checks are done, the execution code is in the implementing resource
+    pub fun vote(proposalId: Int, optionId: Int){
+        pre {
+            VotingTutorialAdministration.proposals[proposalId] != nil: "Cannot vote for a proposal that doesn't exist"
+            VotingTutorialAdministration.proposals[proposalId]!.voters[self.vaultId] == nil: 
+                "Cannot cast vote again using same Governance Token Vault"
+            optionId < VotingTutorialAdministration.proposals[proposalId]!.options.length: "This option does not exist"
+            self.votingWeightDataSnapshot.length > 0: "Can only vote if balance exists"
+            self.votingWeightDataSnapshot[0].blockTs < VotingTutorialAdministration.proposals[proposalId]!.blockTs: 
+                "Can only vote if balance was recorded before proposal was created"
+        }
+    }
+}
+```
+
+The `Ballot` resource is implementing the `Votable` resource interface and thus contains 
+the `vaultId` and `votingWeightDataSnapshot` fields and the `vote` function:
+
+```cadence
+/// Ballot
+///
+/// This is the resource that is issued to users.
+/// When a user gets a Ballot resource, they call the `vote` function
+/// to include their vote.
+///
+pub resource Ballot: Votable {
+    /// Id of VotingTutorialGovernanceToken Vault
+    pub let vaultId: UInt64
+    /// Array of VotingTutorialGovernanceToken Vault's votingWeightData
+    pub let votingWeightDataSnapshot: [VotingTutorialGovernanceToken.VotingWeightData]
+
+    /// Borrows the Vault capability in order to set both the vault id and the VotingWeightData history
+    init(recipientCap: Capability<&VotingTutorialGovernanceToken.Vault{VotingTutorialGovernanceToken.VotingWeight}>) {
+        let recipientRef = recipientCap.borrow() ?? panic("Could not borrow VotingWeight reference from the Capability")
+
+        self.vaultId = recipientRef.vaultId
+        self.votingWeightDataSnapshot = recipientRef.votingWeightDataSnapshot
+    }
+
+    /// Adds the last recorded voter balance before proposal creation 
+    /// to the chosen proposal and option
+    pub fun vote(proposalId: Int, optionId: Int) {
+        var votingWeight: VotingTutorialGovernanceToken.VotingWeightData = self.votingWeightDataSnapshot[0]
+
+        for votingWeightData in self.votingWeightDataSnapshot {
+            if votingWeightData.blockTs <= VotingTutorialAdministration.proposals[proposalId]!.blockTs {
+                votingWeight = votingWeightData
+            } else {
+                break
+            }
+        }
+
+        let proposalData = VotingTutorialAdministration.proposals[proposalId]!
+        proposalData.votes[optionId] = proposalData.votes[optionId]! + votingWeight.vaultBalance
+        proposalData.voters[self.vaultId] = true
+        VotingTutorialAdministration.proposals.insert(key: proposalId, proposalData)
+    }
+}
+```
 
 A user can request a `Ballot`, and then vote for a proposal,
 effectively tallying the vote weight in this contract.
@@ -477,9 +548,32 @@ effectively tallying the vote weight in this contract.
 Using a resource type is logical for this application, because if a user wants to delegate 
 their vote, they can send that `Ballot` to another account.
 
-Lastly, an `Administrator` resource allows to add proposals.
+The other resource in this contract is the `Administrator` resource, which allows to add 
+proposals via the `addProposals` function, which takes a dictionary from integer keys to 
+the aforementioned `ProposalData` structs. It is later stored in the storage of the 
+deploying account and then retrieved by the transaction for proposal creation which must 
+be signed by the same account.
 
-{TODO: Include Administrator example here and some more explanation}
+```cadence
+/// Administrator
+///
+/// The Administrator resource allows to add proposals
+pub resource Administrator {
+
+    /// addProposals initializes all the proposals for the voting
+    pub fun addProposals(_ proposals: {Int : ProposalData}) {
+        pre {
+            proposals.length > 0: "Cannot add empty proposals data"
+        }
+        for key in proposals.keys {
+            if (VotingTutorialAdministration.proposals[key] != nil) {
+                panic("Proposal with this key already exists")
+            }
+            VotingTutorialAdministration.proposals[key] = proposals[key]
+        }
+    }
+}
+```
 
 The public contract function `issueBallot` takes a capability as a parameter and uses it 
 to create a new ballot based on the voter's voting weight data. 
@@ -711,30 +805,27 @@ transaction {
 }
 ```
 
-The transactions will need to be
-[authorized by an account](https://developers.flow.com/tools/flow-cli/send-transactions),
-which means that the users have to set their addresses
-as the authorizers for a transaction and sign the transaction with their accounts' 
-private keys.
+The transactions will need to be [authorized by an account](https://developers.flow.com/tools/flow-cli/send-transactions),
+which means that the users have to set their addresses as the authorizers 
+for a transaction and sign the transaction with their accounts' private keys.
 
 In the playground, this was simply accomplished by clicking
 on the icon for the account you wanted to authorize with, but with the CLI,
 you have to be more explicit since you are now controlling the private keys.
 
-Please execute this transaction for both users:
+In order to execute transactions, you need to use the command [flow transactions send](https://developers.flow.com/tools/flow-cli/send-transactions).
+Please do this now for both users by using the `signer` flag and 
+indicating the account names:
 
 ```console
 flow transactions send transactions/tx_01_SetupAccount.cdc --signer acct2
 flow transactions send transactions/tx_01_SetupAccount.cdc --signer acct3
 ```
 
-{TODO: Explain what flow transactions send is doing and what the arguments mean. link to the docs where applicable}
-
 ## Mint tokens to those two accounts
 
-Now that both user accounts have empty governance token vaults
-and a receiver capability which allows them to receive tokens,  
-
+Now that both user accounts have empty governance token vaults 
+and a receiver capability which allows them to receive tokens, 
 we can now mint tokens to the accounts via this transaction, 
 which uses the capabilities as arguments to the `mintTokens` function:
 
@@ -781,15 +872,17 @@ transaction (recipient1: Address, recipient2: Address, amountRecipient1: UFix64,
 }
 ```
 
-Please execute this transaction as the administrator, indicating both the receiving 
-account addresses (which usually do not differ in the local environment), 
-and the token amounts:
+As you can see in the transaction code, it takes two account addresses and 
+two token amounts as arguments. As described in the documentation referred above, you 
+need to indicate the arguments without any flags but in the right order.  
+
+Please execute this transaction now as the administrator, indicating both the receiving 
+account addresses (which usually do not differ in the local environment, but please 
+double check the `flow.json` file), and the token amounts (30.0 and 150.0 in this case):
 
 ```console
 flow transactions send transactions/tx_02_MintTokens.cdc "0x01cf0e2f2f715450" "0x179b6b1cb6755e31" 30.0 150.0 --signer emulator-account
 ```
-
-{TODO: Explain how we are passing arguments to transactions via the CLI}
 
 ## Create the proposals for voting
 

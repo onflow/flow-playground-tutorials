@@ -18,11 +18,11 @@ The previous tutorials utilized the Flow Playground, which is a great place
 to test out small projects and pieces of code in Cadence, but not quite sufficient
 for production-level development.
 
-For this tutorial, we will be using the [Flow Emulator](https://github.com/onflow/flow-emulator),
-is a local version of the Flow blockchain that you run on your computer.  
+For this tutorial, we will be using the [Flow Emulator](https://github.com/onflow/flow-emulator), 
+a local version of the Flow blockchain that you run on your computer.  
 
-This can be achieved by using the [Flow Command Line Interface](https://developers.flow.com/tools/flow-cli/index),
-(otherwise known as the Flow CLI) which allows us to run our code on 
+This can be achieved by using the [Flow Command Line Interface](https://developers.flow.com/tools/flow-cli/index) 
+(otherwise known as the Flow CLI), which allows us to run our code on 
 the local blockchain emulator.
 
 The `Flow CLI` serves for managing the emulator and all files used
@@ -34,7 +34,8 @@ testnet and mainnet for various information regarding e.g. the network status,
 or different entities.
 
 This tutorial also assumes that you are somewhat familiar
-with the [Flow Fungible Token standard](https://github.com/onflow/flow-ft).
+with the [Flow Fungible Token standard](https://github.com/onflow/flow-ft), if not, a brief 
+introduction with additional links is also given [below](#fungibletoken).
 
 ---
 We'll take you through the following steps to get comfortable with the voting contracts 
@@ -228,7 +229,7 @@ token functionality of withdrawing and receiving tokens as well as reading
 the current balance.
  
 Lastly, there is a resource called `VaultMinter`, which provides the admin
-with a function to mint tokens to `FungibleToken` receiver capability.
+with a function to mint tokens to a `FungibleToken` receiver capability.
 This is given as a capability of the needed type; `&AnyResource{Receiver}` can be
 any resource that implements the Receiver interface.
 
@@ -249,7 +250,7 @@ that implements the receiver interface because it gives users a lot more flexibi
 for how they want to manage their accounts. A user could replace their regular
 receiver with one that forwards the tokens to a different account that they have decided
 to delegate their voting power to, or it could split the tokens into different vaults
-in order to split up their votes in interesting ways. These are just a couple examples,
+in order to split up their votes in interesting ways. These are just a couple of examples,
 but the capability and resource model of Cadence is what makes this possible!
 
 Here is the complete code for `VotingTutorialGovernanceToken`:  
@@ -639,7 +640,7 @@ pub contract VotingTutorialAdministration {
 }
 ```
 
-Now that we've covered the contracts, lets set up some accounts and a proposal 
+Now that we've covered the contracts, let's set up some accounts and a proposal 
 for them to vote on.
 
 ## Create two extra accounts ('acct2', 'acct3')

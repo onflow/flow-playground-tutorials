@@ -2,33 +2,68 @@
 title: 10. Composable Resources
 ---
 
-In this tutorial, we're going to walk you through how resources can own other resources.
-We will also see how a struct can be used in order to show the content of a resource 
-without moving the resource itself, and how a private capability allows for 
-restricted access.
+In this tutorial, we're going to demonstrate how resources can own other resources
+and how this unique feature of Cadence opens up powerful possibilities for
+how smart contracts and their ecosystems can be structured.
+
+We will also see how a struct can be used in order to show the content of a resource without moving the resource itself, and how a private capability allows for restricted access.
 
 ---
 
-The fact that resources can be nested into other resources is one of the cornerstones for 
-the composability which the Flow blockchain provides.  
-To illustrate how this feature works on Flow, we are going to work with a simple example, 
-a pizza that is modeled as a resource and contains ingredients, which are also resources.  
-There are two participants, the customer and the cook. The customer is only allowed to 
-review the order, while the cook can add toppings. This separation is enabled through the 
-use of both a public and a private capability and also a struct. Private capabilities can 
-only be accessed from authorized accounts, please take a look at the [documentation](https://developers.flow.com/cadence/language/capability-based-access-control).  
+The fact that resources can be nested (owned) into other resources is one of the cornerstones of the
+composability which the Flow blockchain provides.
 
-If you haven't yet followed the [Voting Tutorial](https://developers.flow.com/cadence/tutorial/09-voting) 
-where you install the [Flow CLI](https://developers.flow.com/tools/flow-cli/index), 
-please do that now. This will allow us to run our code on a local blockchain emulator. 
-That tutorial will also give you an introduction to the `CLI`, so it's better to finish it 
-before starting with this tutorial.  
+{TODO: More general examples of why resources owning resources is powerful, including mentioning
+ones that we've already talked about in the tutorials like collections holding NFTs,
+and any potential examples from the voting tutorials}
+
+To illustrate how this feature works on Flow, we are going to work with a simple example, 
+a pizza that is modeled as a resource and contains ingredients, which are also resources.
+
+Here are the steps we will go through in order to build a great pizza with our resources:  
+
+1. Learn about and deploy the `BestPizzaPlace` contract, which defines the Pizza, Dough,
+Sauce and Topping resources.
+2. Create an account for the customer.
+3. Create a Pizza with Sauce and store it in the emulator-account.
+4. Add multiple Toppings to the Pizza.
+5. Get the Pizza ingredient description without moving the resource.
+
+If you haven't yet followed the [Voting Tutorial](https://developers.flow.com/cadence/tutorial/09-voting), 
+please do that now.
+That tutorial gives an introduction to the `CLI` and shows how to install it and run simple
+commands for smart contract development, so it's better to finish it before starting with this tutorial.
+
+{TODO: If we decide to use the NFT standard, also remind them to get familiar with that standard}
 
 You will also need a local copy of the tutorials code, which you should have downloaded 
 in the voting tutorial.  
 If not, please download the project in the terminal by executing 
 `git clone git@github.com:onflow/flow-playground-tutorials.git`, and then go to the 
 project folder: `cd flow-playground-tutorials/tutorials/08-resource-compose`.  
+
+## What does it mean for a resource to own another resource?
+
+{TODO: Explain this here, a resource can define any type as a field, including another resource,
+this means that the resource effectively OWNS and controls the other resource. If the
+parent resource is moved, the other resource is also moved. This is better than the alternative
+where you would have a separate contract that has a ledger that tracks which resources own other resources
+which can easily be hacked, get out of sync, and doesn't provide any nice functionality to
+access the owned objects directly through the resources. It further reinforces that representation
+of assets on chain should intuitively be similar to how they are in real life. In real life,
+a human owns a wallet that has cash in it. If the wallet is moved to another location, the cash
+moves with it without the owner needing to do anything else like updating a different ledger
+that tracks where the cash is. Expand even more on this and other similar examples.
+Get the reader excited about these kind of possibilities and what it can mean for their smart contract}
+
+{TODO: Transition into how this can be used to represent a pizza owning ingredients}
+
+There are two participants, the customer and the cook. The customer is only allowed to 
+review the order, while the cook can add toppings. This separation is enabled through the 
+use of both a public and a private capability and also a struct. Private capabilities can 
+only be accessed from authorized accounts, please take a look at the [documentation](https://developers.flow.com/cadence/language/capability-based-access-control).  
+
+
 
 As you can see, all logic is contained in only one contract, `BestPizzaPlace.cdc`. 
 Let's break down the content of the contract into pieces: There is a resource interface 
@@ -126,13 +161,7 @@ pub struct Order {
 }
 ```
 
-These are the steps you will need to follow in order to get a great pizza:  
 
-1. Deploy the BestPizzaPlace contract, which will add the Pizza, Dough, Sauce and Topping resource definitions to the emulator-account
-2. Create an account for the customer
-3. Create a Pizza with Sauce and store it in the emulator-account
-4. Add multiple Toppings to the Pizza
-5. Get the Pizza ingredient description without moving the resource
 
 ## Preparation
 

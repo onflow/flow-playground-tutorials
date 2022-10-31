@@ -58,12 +58,7 @@ Get the reader excited about these kind of possibilities and what it can mean fo
 
 {TODO: Transition into how this can be used to represent a pizza owning ingredients}
 
-There are two participants, the customer and the cook. The customer is only allowed to 
-review the order, while the cook can add toppings. This separation is enabled through the 
-use of both a public and a private capability and also a struct. Private capabilities can 
-only be accessed from authorized accounts, please take a look at the [documentation](https://developers.flow.com/cadence/language/capability-based-access-control).  
-
-
+## Pizza Shop Smart Contract
 
 As you can see, all logic is contained in only one contract, `BestPizzaPlace.cdc`. 
 Let's break down the content of the contract into pieces: There is a resource interface 
@@ -161,7 +156,10 @@ pub struct Order {
 }
 ```
 
-
+There are two participants, the customer and the cook. The customer is only allowed to 
+review the order, while the cook can add toppings. This separation is enabled through the 
+use of both a public and a private capability and also a struct. Private capabilities can 
+only be accessed from authorized accounts, please take a look at the [documentation](https://developers.flow.com/cadence/language/capability-based-access-control).  
 
 ## Preparation
 

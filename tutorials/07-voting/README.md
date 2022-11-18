@@ -613,7 +613,7 @@ pub contract VotingTutorialAdministration {
     pub let adminStoragePath: StoragePath
     pub let ballotStoragePath: StoragePath
 
-    /// ProposalData contains all the data concering a proposal,
+    /// ProposalData contains all the data concerning a proposal,
     /// including the votes and a voter registry
     pub struct ProposalData {
         /// The name of the proposal
@@ -928,7 +928,7 @@ transaction {
     }
 
     execute {
-        // Call the addProposals function to create the dictionary of ProposolData
+        // Call the addProposals function to create the dictionary of ProposalData
         self.adminRef.addProposals(self.proposals)
         log("Proposals added!")
     }

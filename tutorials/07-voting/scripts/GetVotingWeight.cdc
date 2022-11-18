@@ -1,5 +1,5 @@
-import FungibleToken from 0xf8d6e0586b0a20c7
-import VotingTutorialGovernanceToken from 0xf8d6e0586b0a20c7
+import FungibleToken from "./../contracts/FungibleToken.cdc"
+import VotingTutorialGovernanceToken from "./../contracts/VotingTutorialGovernance.cdc"
 
 pub fun main(account1: Address, account2: Address): [{String: AnyStruct}] {
   let acct1 = getAccount(account1)

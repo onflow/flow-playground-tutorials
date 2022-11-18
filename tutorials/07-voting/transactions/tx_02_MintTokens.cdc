@@ -1,15 +1,14 @@
-// Mint Tokens
-import FungibleToken from 0xf8d6e0586b0a20c7
-import VotingTutorialGovernanceToken from 0xf8d6e0586b0a20c7
+import FungibleToken from "../contracts/FungibleToken.cdc"
+import VotingTutorialGovernanceToken from "../contracts/VotingTutorialGovernance.cdc"
 
-/// This transaction mints tokens and deposits them into the receivers account's vault
+// This transaction mints tokens and deposits them into the receivers account's vault
 transaction (recipient1: Address, recipient2: Address, amountRecipient1: UFix64, amountRecipient2: UFix64) {
 
-    /// Local variable for storing the reference to the minter resource
+    // Local variable for storing the reference to the minter resource
     let mintingRef: &VotingTutorialGovernanceToken.VaultMinter
 
-    /// Local variables for storing the references to the Vaults of
-    /// the accounts that will receive the newly minted tokens
+    // Local variables for storing the references to the Vaults of
+    // the accounts that will receive the newly minted tokens
     var receiver1: Capability<&AnyResource{FungibleToken.Receiver}>
     var receiver2: Capability<&AnyResource{FungibleToken.Receiver}>
 

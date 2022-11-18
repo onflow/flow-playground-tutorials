@@ -1,6 +1,4 @@
-// CreateNewProposals
-
-import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
+import VotingTutorialAdministration from "./../contracts/VotingTutorialAdministration.cdc"
 
 /// This transaction allows the administrator of the VotingTutorialAdministration contract
 /// to create new proposals for voting and save them to the smart contract

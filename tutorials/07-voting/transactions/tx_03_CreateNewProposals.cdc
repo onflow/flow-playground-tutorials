@@ -23,7 +23,7 @@ transaction {
     }
 
     execute {
-        // Call the addProposals function to create the dictionary of ProposolData
+        // Call the addProposals function to create the dictionary of ProposalData
         self.adminRef.addProposals(self.proposals)
         log("Proposals added!")
     }

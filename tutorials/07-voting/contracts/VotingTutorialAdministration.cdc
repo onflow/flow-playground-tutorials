@@ -21,7 +21,7 @@ pub contract VotingTutorialAdministration {
     pub let adminStoragePath: StoragePath
     pub let ballotStoragePath: StoragePath
 
-    /// ProposalData contains all the data concering a proposal,
+    /// ProposalData contains all the data concerning a proposal,
     /// including the votes and a voter registry
     pub struct ProposalData {
         /// The name of the proposal

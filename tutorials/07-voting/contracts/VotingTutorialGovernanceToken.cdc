@@ -1,17 +1,13 @@
-/*
-* The VotingTutorialGovernanceToken contract is a sample implementation 
-* of a fungible token on Flow which can be used for voting.
-*/
-
 import FungibleToken from "./FungibleToken.cdc"
 
+/// The VotingTutorialGovernanceToken contract is a sample implementation 
+/// of a fungible token on Flow which can be used for voting.
+///
 pub contract VotingTutorialGovernanceToken: FungibleToken {
 
     /// Total supply of all tokens in existence.
     pub var totalSupply: UFix64
 
-    /// Paths
-    ///
     /// The Vault will be stored here
     pub let VaultStoragePath: StoragePath
     /// The Minter will be stored here
@@ -44,8 +40,6 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
         }
     }
 
-    /// VotingWeight
-    ///
     /// Interface to record voting weight
     ///
     pub resource interface VotingWeight {
@@ -53,8 +47,6 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
         pub let votingWeightDataSnapshot: [VotingWeightData]
     }
 
-    /// Vault
-    ///
     /// Resource to keep track of Governance Tokens
     ///
     pub resource Vault: FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, VotingWeight {
@@ -74,13 +66,17 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
             self.votingWeightDataSnapshot = []
         }
 
-        /// withdraw takes a fixed point amount as a parameter
+        /// Takes a fixed point amount as a parameter
         /// and withdraws that amount from the Vault.
         ///
-        /// It creates a new temporary Vault that is used to hold
-        /// the money that is being transferred. It returns the newly
+        /// Creates a new temporary Vault that is used to hold
+        /// the money that is withdraw for being transferred. It returns the newly
         /// created Vault to the context that called so it can be deposited
         /// elsewhere.
+        ///
+        /// @param amount: The quantity of tokens to be taken off the vault
+        /// @return A vault resource containing the withdrawn tokens
+        ///
         pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
             self.balance = self.balance - amount
             emit TokensWithdrawn(amount: amount, from: self.owner?.address)
@@ -88,12 +84,15 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
             return <-create Vault(balance: amount)
         }
 
-        /// deposit takes a Vault object as a parameter and adds
+        /// Takes a Vault object as a parameter and adds
         /// its balance to the balance of the owners Vault.
         ///
         /// It is allowed to destroy the sent Vault because the Vault
         /// was a temporary holder of the tokens. The Vault's balance has
         /// been consumed and therefore can be destroyed.
+        ///
+        /// @param from: The vault containing the tokens to be deposited
+        ///
         pub fun deposit(from: @FungibleToken.Vault) {
             let vault <- from as! @VotingTutorialGovernanceToken.Vault
             self.balance = self.balance + vault.balance
@@ -102,32 +101,37 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
             destroy vault
         }
 
-        /// recordVotingWeight records the current voting weight of the vault
+        /// Records the current voting weight of the vault
+        ///
         priv fun recordVotingWeight() {
             let ts = getCurrentBlock().timestamp
             self.votingWeightDataSnapshot.append(VotingWeightData(vaultBalance: self.balance, blockTs: ts))
         }
-
     }
 
-    /// createEmptyVault creates a new Vault with a balance of zero
-    /// and returns it to the calling context. A user must call this function
-    /// and store the returned Vault in their storage in order to allow their
+    /// Creates a new Vault with a balance of zero and returns it to  
+    /// the calling context. A user must call this function and store 
+    /// the returned Vault in their storage in order to allow their 
     /// account to be able to receive deposits of this token type.
+    ///
+    /// @return A new vault resource
+    ///
     pub fun createEmptyVault(): @FungibleToken.Vault {
         return <-create Vault(balance: 0.0)
     }
 
-    /// VaultMinter
-    ///
     /// Resource object that an admin can control to mint new tokens
     ///
     pub resource VaultMinter {
 
-        /// mintTokens mints new tokens and deposits them into an account's vault
+        /// Mints new tokens and deposits them into an account's vault
         /// using their `Receiver` reference.
         /// We say `&AnyResource{Receiver}` to say that the recipient can be any resource
         /// as long as it implements the Receiver interface
+        ///
+        /// @param amount: Quantity of tokens to be created
+        /// @param recipient: A capability pointing to the resource where the new tokens will be hold
+        ///
         pub fun mintTokens(amount: UFix64, recipient: Capability<&AnyResource{FungibleToken.Receiver}>) {
             let recipientRef = recipient.borrow()
                 ?? panic("Could not borrow a receiver reference to the vault")
@@ -142,6 +146,7 @@ pub contract VotingTutorialGovernanceToken: FungibleToken {
     /// The init function for the contract. All fields in the contract must
     /// be initialized at deployment. This is just an example of what
     /// an implementation could do in the init function. The numbers are arbitrary.
+    ///
     init() {
         self.totalSupply = 0.0
 

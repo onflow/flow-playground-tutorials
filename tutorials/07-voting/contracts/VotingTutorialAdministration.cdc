@@ -1,28 +1,27 @@
-/*
-*   To run a vote, the Admin deploys the smart contract,
-*   then adds the proposals. Further proposals can be added later.
-*
-*   Users can create ballots and vote only with their 
-*   VotingTutorialGovernanceToken balance prior to when a proposal was created.
-*
-*   Every user with a ballot is allowed to approve their chosen proposals.
-*   A user can choose their votes and cast them
-*   with the tx_05_SelectAndCastVotes.cdc transaction.
-*/
-
 import VotingTutorialGovernanceToken from "./VotingTutorialGovernanceToken.cdc"
 
+/// To run a vote, the Admin deploys the smart contract,
+/// then adds the proposals. Further proposals can be added later.
+///
+/// Users can create ballots and vote only with their 
+/// VotingTutorialGovernanceToken balance prior to when a proposal was created.
+///
+/// Every user with a ballot is allowed to approve their chosen proposals.
+/// A user can choose their votes and cast them
+/// with the tx_05_SelectAndCastVotes.cdc transaction.
+///
 pub contract VotingTutorialAdministration {
 
     /// Dictionary of proposals to be approved
     pub var proposals: {Int : ProposalData}
 
-    /// Paths
+    /// 
     pub let adminStoragePath: StoragePath
     pub let ballotStoragePath: StoragePath
 
     /// ProposalData contains all the data concerning a proposal,
     /// including the votes and a voter registry
+    ///
     pub struct ProposalData {
         /// The name of the proposal
         pub let name: String
@@ -31,9 +30,9 @@ pub contract VotingTutorialAdministration {
         /// When the proposal was created
         pub let blockTs: UFix64
         /// The total votes per option, as represented by the accumulated balances of voters
-        // "pub(set)" - this access modifier gives write access to everyone, 
-        // so the Ballot resource can update it.
-        // see https://developers.flow.com/cadence/language/access-control for more information
+        /// "pub(set)" - this access modifier gives write access to everyone, 
+        /// so the Ballot resource can update it.
+        /// see https://developers.flow.com/cadence/language/access-control for more information
         pub(set) var votes: {Int : UFix64}
         /// Used to record if a voter as represented by the vault id has already voted
         pub(set) var voters: {UInt64: Bool}
@@ -44,18 +43,17 @@ pub contract VotingTutorialAdministration {
             self.blockTs = blockTs
             self.votes = {}
             for index, option in options {
-                /// Needed because we force unwrap later
+                // Needed because we force unwrap later
                 self.votes[index] = 0.0
             }
             self.voters = {}
         }
     }
 
-    /// Votable
-    ///
     /// Interface which keeps track of voting weight history and allows to cast a vote
     ///
     pub resource interface Votable {
+        
         pub vaultId: UInt64
         pub votingWeightDataSnapshot: [VotingTutorialGovernanceToken.VotingWeightData]
 
@@ -73,8 +71,6 @@ pub contract VotingTutorialAdministration {
         }
     }
 
-    /// Ballot
-    ///
     /// This is the resource that is issued to users.
     /// When a user gets a Ballot resource, they call the `vote` function
     /// to include their vote.
@@ -95,6 +91,10 @@ pub contract VotingTutorialAdministration {
 
         /// Adds the last recorded voter balance before proposal creation 
         /// to the chosen proposal and option
+        ///
+        /// @param proposalId: The ID of the proposal to be voted
+        /// @param optionId: The ID of the chosen option vor the vote
+        ///
         pub fun vote(proposalId: Int, optionId: Int) {
             var votingWeight: VotingTutorialGovernanceToken.VotingWeightData = self.votingWeightDataSnapshot[0]
 
@@ -113,12 +113,14 @@ pub contract VotingTutorialAdministration {
         }
     }
 
-    /// Administrator
-    ///
     /// The Administrator resource allows to add proposals
+    ///
     pub resource Administrator {
 
-        /// addProposals initializes all the proposals for the voting
+        /// Initializes all the proposals for the voting
+        ///
+        /// @param _ proposals: The dictionary containing the proposals for the voting
+        ///
         pub fun addProposals(_ proposals: {Int : ProposalData}) {
             pre {
                 proposals.length > 0: "Cannot add empty proposals data"
@@ -132,7 +134,11 @@ pub contract VotingTutorialAdministration {
         }
     }
 
-    /// issueBallot creates a new Ballot
+    /// Creates a new Ballot
+    ///
+    /// @param recipientCap: The capability to the vault that will be accounting the votes
+    /// @return The ballot resource 
+    ///
     pub fun issueBallot(recipientCap: 
         Capability<&VotingTutorialGovernanceToken.Vault{VotingTutorialGovernanceToken.VotingWeight}>): @Ballot {
         return <-create Ballot(recipientCap: recipientCap)
@@ -140,6 +146,7 @@ pub contract VotingTutorialAdministration {
 
     /// Initializes the contract by setting empty proposals,
     /// assigning the paths and creating a new Admin resource and saving it in account storage
+    ///
     init() {
         self.proposals = {}
 

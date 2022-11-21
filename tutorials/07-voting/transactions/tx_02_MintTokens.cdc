@@ -1,5 +1,5 @@
-import FungibleToken from "../contracts/FungibleToken.cdc"
-import VotingTutorialGovernanceToken from "../contracts/VotingTutorialGovernance.cdc"
+import FungibleToken from 0xf8d6e0586b0a20c7
+import VotingTutorialGovernanceToken from 0xf8d6e0586b0a20c7
 
 // This transaction mints tokens and deposits them into the receivers account's vault
 transaction (recipient1: Address, recipient2: Address, amountRecipient1: UFix64, amountRecipient2: UFix64) {

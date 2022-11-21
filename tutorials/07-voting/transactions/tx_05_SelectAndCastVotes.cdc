@@ -1,5 +1,4 @@
-import VotingTutorialAdministration from "./../contracts/VotingTutorialAdministration.cdc"
-
+import VotingTutorialAdministration from 0xf8d6e0586b0a20c7
 // This transaction allows a voter to select a proposal via it's id and vote for it
 transaction (proposalId: Int, optionId: Int) {
     prepare(voter: AuthAccount) {
